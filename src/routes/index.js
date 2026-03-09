@@ -8,7 +8,8 @@ const petRoutes = require('./petRoutes');
 const veterinarianRoutes = require('./veterinarianRoutes');
 const specialtyRoutes = require('./specialtyRoutes');
 const userRoutes = require('./userRoutes');
-
+const roleRoutes = require('./roleRoutes');
+const userRoleRoutes = require('./userRoleRoutes');
 //Ruta sin autenticación JWT
 router.use('/auth/users', authUserRoutes);
 
@@ -20,5 +21,7 @@ router.use('/pets', petRoutes);
 router.use('/veterinarians', veterinarianRoutes);
 router.use('/specialties', specialtyRoutes);
 router.use('/users', userRoutes);
+router.use('/roles', roleRoutes);
+router.use('/user-roles', userRoleRoutes);
 
 module.exports = router;
