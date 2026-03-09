@@ -14,4 +14,4 @@ const pool = new Pool({
   ssl: toBool(process.env.DB_SSL) ? { rejectUnauthorized: false } : false
 });
 
-module.exports = { pool };
+module.exports = pool;
