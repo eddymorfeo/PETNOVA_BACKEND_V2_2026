@@ -15,6 +15,11 @@ const timeOffRoutes = require('./timeOffRoutes');
 const appointmentTypeRoutes = require('./appointmentTypeRoutes');
 const appointmentRoutes = require('./appointmentRoutes');
 const appointmentCheckinRoutes = require('./appointmentCheckinRoutes');
+const consultationRoutes = require('./consultationRoutes');
+const consultationNoteRoutes = require('./consultationNoteRoutes');
+const treatmentRoutes = require('./treatmentRoutes');
+const medicationAdministeredRoutes = require('./medicationAdministeredRoutes');
+const prescriptionRoutes = require('./prescriptionRoutes');
 
 //Ruta sin autenticación JWT
 router.use('/auth/users', authUserRoutes);
@@ -34,5 +39,10 @@ router.use('/time-off', timeOffRoutes);
 router.use('/appointment-types', appointmentTypeRoutes);
 router.use('/appointments', appointmentRoutes);
 router.use('/appointment-checkins', appointmentCheckinRoutes);
+router.use('/consultations', consultationRoutes);
+router.use('/consultation-notes', consultationNoteRoutes);
+router.use('/treatments', treatmentRoutes);
+router.use('/medications-administered', medicationAdministeredRoutes);
+router.use('/prescriptions', prescriptionRoutes);
 
 module.exports = router;
