@@ -24,6 +24,8 @@ const attachmentRoutes = require('./attachmentRoutes');
 const petVaccinationRoutes = require('./petVaccinationRoutes');
 const vaccineCatalogRoutes = require('./vaccineCatalogRoutes');
 const reminderRoutes = require('./reminderRoutes');
+const permissionRoutes = require('./permissionRoutes');
+const rolePermissionRoutes = require('./rolePermissionRoutes');
 
 //Ruta sin autenticación JWT
 router.use('/auth/users', authUserRoutes);
@@ -52,5 +54,7 @@ router.use('/attachments', attachmentRoutes);
 router.use('/pet-vaccinations', petVaccinationRoutes);
 router.use('/vaccines-catalog', vaccineCatalogRoutes);
 router.use('/reminders', reminderRoutes);
+router.use('/permissions', permissionRoutes);
+router.use('/role-permissions', rolePermissionRoutes);
 
 module.exports = router;
