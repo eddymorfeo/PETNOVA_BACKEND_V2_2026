@@ -20,6 +20,10 @@ const consultationNoteRoutes = require('./consultationNoteRoutes');
 const treatmentRoutes = require('./treatmentRoutes');
 const medicationAdministeredRoutes = require('./medicationAdministeredRoutes');
 const prescriptionRoutes = require('./prescriptionRoutes');
+const attachmentRoutes = require('./attachmentRoutes');
+const petVaccinationRoutes = require('./petVaccinationRoutes');
+const vaccineCatalogRoutes = require('./vaccineCatalogRoutes');
+const reminderRoutes = require('./reminderRoutes');
 
 //Ruta sin autenticación JWT
 router.use('/auth/users', authUserRoutes);
@@ -44,5 +48,9 @@ router.use('/consultation-notes', consultationNoteRoutes);
 router.use('/treatments', treatmentRoutes);
 router.use('/medications-administered', medicationAdministeredRoutes);
 router.use('/prescriptions', prescriptionRoutes);
+router.use('/attachments', attachmentRoutes);
+router.use('/pet-vaccinations', petVaccinationRoutes);
+router.use('/vaccines-catalog', vaccineCatalogRoutes);
+router.use('/reminders', reminderRoutes);
 
 module.exports = router;
