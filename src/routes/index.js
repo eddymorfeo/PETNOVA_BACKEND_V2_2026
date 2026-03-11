@@ -28,6 +28,11 @@ const permissionRoutes = require('./permissionRoutes');
 const rolePermissionRoutes = require('./rolePermissionRoutes');
 const clientAuthSessionRoutes = require('./clientAuthSessionRoutes');
 const passwordResetTokenRoutes = require('./passwordResetTokenRoutes');
+const guestBookingRoutes = require('./guestBookingRoutes');
+const appointmentEventRoutes = require('./appointmentEventRoutes');
+const emailOutboxRoutes = require('./emailOutboxRoutes');
+const systemSettingRoutes = require('./systemSettingRoutes');
+const auditLogRoutes = require('./auditLogRoutes');
 
 //Ruta sin autenticación JWT
 router.use('/auth/users', authUserRoutes);
@@ -60,5 +65,10 @@ router.use('/permissions', permissionRoutes);
 router.use('/role-permissions', rolePermissionRoutes);
 router.use('/client-auth-sessions', clientAuthSessionRoutes);
 router.use('/password-reset-tokens', passwordResetTokenRoutes);
+router.use('/guest-bookings', guestBookingRoutes);
+router.use('/appointment-events', appointmentEventRoutes);
+router.use('/email-outbox', emailOutboxRoutes);
+router.use('/system-settings', systemSettingRoutes);
+router.use('/audit-logs', auditLogRoutes);
 
 module.exports = router;
