@@ -26,6 +26,8 @@ const vaccineCatalogRoutes = require('./vaccineCatalogRoutes');
 const reminderRoutes = require('./reminderRoutes');
 const permissionRoutes = require('./permissionRoutes');
 const rolePermissionRoutes = require('./rolePermissionRoutes');
+const clientAuthSessionRoutes = require('./clientAuthSessionRoutes');
+const passwordResetTokenRoutes = require('./passwordResetTokenRoutes');
 
 //Ruta sin autenticación JWT
 router.use('/auth/users', authUserRoutes);
@@ -56,5 +58,7 @@ router.use('/vaccines-catalog', vaccineCatalogRoutes);
 router.use('/reminders', reminderRoutes);
 router.use('/permissions', permissionRoutes);
 router.use('/role-permissions', rolePermissionRoutes);
+router.use('/client-auth-sessions', clientAuthSessionRoutes);
+router.use('/password-reset-tokens', passwordResetTokenRoutes);
 
 module.exports = router;
