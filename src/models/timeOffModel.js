@@ -161,10 +161,30 @@ const deleteTimeOffById = async (timeOffId) => {
   return result.rows[0] || null;
 };
 
+const getTimeOffByVeterinarianAndDate = async (veterinarianId, appointmentDate) => {
+  const query = `
+    SELECT
+      id,
+      veterinarian_id,
+      starts_at,
+      ends_at,
+      reason
+    FROM time_off
+    WHERE veterinarian_id = $1
+      AND DATE(starts_at) <= $2
+      AND DATE(ends_at) >= $2
+    ORDER BY starts_at
+  `;
+
+  const result = await pool.query(query, [veterinarianId, appointmentDate]);
+  return result.rows;
+};
+
 module.exports = {
   createTimeOff,
   findTimeOffById,
   getAllTimeOff,
   updateTimeOffById,
   deleteTimeOffById,
+  getTimeOffByVeterinarianAndDate,
 };

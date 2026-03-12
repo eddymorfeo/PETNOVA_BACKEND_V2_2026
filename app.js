@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const { startEmailOutboxWorker } = require('./src/services/email/emailOutboxProcessorService');
 
 const routes = require('./src/routes');
 const errorHandler = require('./src/middlewares/errorHandler');
@@ -28,6 +29,8 @@ app.get('/', (req, res) => {
 app.use('/api', routes);
 
 app.use(errorHandler);
+
+startEmailOutboxWorker();
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

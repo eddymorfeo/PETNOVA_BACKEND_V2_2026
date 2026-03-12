@@ -33,9 +33,11 @@ const appointmentEventRoutes = require('./appointmentEventRoutes');
 const emailOutboxRoutes = require('./emailOutboxRoutes');
 const systemSettingRoutes = require('./systemSettingRoutes');
 const auditLogRoutes = require('./auditLogRoutes');
+const publicGuestAppointmentRoutes = require('./publicGuestAppointmentRoutes');
 
 //Ruta sin autenticación JWT
 router.use('/auth/users', authUserRoutes);
+router.use('/public/guest-appointments', publicGuestAppointmentRoutes);
 
 //Rutas con autenticacion de JWT
 router.use('/clients', clientRoutes);

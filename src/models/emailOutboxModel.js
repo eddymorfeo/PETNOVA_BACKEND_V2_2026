@@ -1,4 +1,4 @@
-const pool = require('../db/db');
+const pool = require("../db/db");
 
 const createEmailOutbox = async ({
   toEmail,
@@ -44,7 +44,7 @@ const createEmailOutbox = async ({
     toEmail,
     template,
     JSON.stringify(payload),
-    status || 'QUEUED',
+    status || "QUEUED",
     lastError || null,
     scheduledFor || null,
     sentAt || null,
@@ -150,7 +150,7 @@ const updateEmailOutboxById = async (emailOutboxId, data, updatedBy) => {
 
   const query = `
     UPDATE email_outbox
-    SET ${fields.join(', ')}
+    SET ${fields.join(", ")}
     WHERE id = $${index}
     RETURNING
       id,
@@ -194,10 +194,104 @@ const deleteEmailOutboxById = async (emailOutboxId) => {
   return result.rows[0] || null;
 };
 
+const claimPendingEmailOutboxBatch = async (limit = 20) => {
+  const query = `
+    WITH candidates AS (
+      SELECT id
+      FROM email_outbox
+      WHERE status = 'QUEUED'
+        AND (scheduled_for IS NULL OR scheduled_for <= NOW())
+      ORDER BY created_at ASC
+      LIMIT $1
+      FOR UPDATE SKIP LOCKED
+    )
+    UPDATE email_outbox AS e
+    SET
+      status = 'SENDING',
+      updated_at = NOW()
+    FROM candidates
+    WHERE e.id = candidates.id
+    RETURNING
+      e.id,
+      e.to_email,
+      e.template,
+      e.payload,
+      e.status,
+      e.last_error,
+      e.scheduled_for,
+      e.sent_at,
+      e.created_by,
+      e.updated_by,
+      e.created_at,
+      e.updated_at
+  `;
+
+  const result = await pool.query(query, [limit]);
+  return result.rows;
+};
+
+const markEmailOutboxAsSent = async (emailOutboxId) => {
+  const query = `
+    UPDATE email_outbox
+    SET
+      status = 'SENT',
+      last_error = NULL,
+      sent_at = NOW(),
+      updated_at = NOW()
+    WHERE id = $1
+    RETURNING
+      id,
+      to_email,
+      template,
+      payload,
+      status,
+      last_error,
+      scheduled_for,
+      sent_at,
+      created_by,
+      updated_by,
+      created_at,
+      updated_at
+  `;
+
+  const result = await pool.query(query, [emailOutboxId]);
+  return result.rows[0] || null;
+};
+
+const markEmailOutboxAsFailed = async (emailOutboxId, lastError) => {
+  const query = `
+    UPDATE email_outbox
+    SET
+      status = 'FAILED',
+      last_error = $2,
+      updated_at = NOW()
+    WHERE id = $1
+    RETURNING
+      id,
+      to_email,
+      template,
+      payload,
+      status,
+      last_error,
+      scheduled_for,
+      sent_at,
+      created_by,
+      updated_by,
+      created_at,
+      updated_at
+  `;
+
+  const result = await pool.query(query, [emailOutboxId, lastError]);
+  return result.rows[0] || null;
+};
+
 module.exports = {
   createEmailOutbox,
   findEmailOutboxById,
   getAllEmailOutbox,
   updateEmailOutboxById,
   deleteEmailOutboxById,
+  claimPendingEmailOutboxBatch,
+  markEmailOutboxAsSent,
+  markEmailOutboxAsFailed,
 };

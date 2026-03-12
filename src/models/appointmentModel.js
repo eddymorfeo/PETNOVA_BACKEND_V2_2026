@@ -262,10 +262,30 @@ const cancelAppointmentById = async (appointmentId, cancelReason, updatedBy) => 
   return result.rows[0] || null;
 };
 
+const getAppointmentsByVeterinarianAndDate = async (veterinarianId, appointmentDate) => {
+  const query = `
+    SELECT
+      id,
+      veterinarian_id,
+      starts_at,
+      ends_at,
+      status
+    FROM appointments
+    WHERE veterinarian_id = $1
+      AND DATE(starts_at) = $2
+      AND status <> 'CANCELLED'
+    ORDER BY starts_at
+  `;
+
+  const result = await pool.query(query, [veterinarianId, appointmentDate]);
+  return result.rows;
+};
+
 module.exports = {
   createAppointment,
   findAppointmentById,
   getAllAppointments,
   updateAppointmentById,
   cancelAppointmentById,
+  getAppointmentsByVeterinarianAndDate,
 };

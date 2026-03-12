@@ -189,10 +189,31 @@ const softDeleteWorkingHourById = async (workingHourId, updatedBy) => {
   return result.rows[0] || null;
 };
 
+const getWorkingHoursByVeterinarianId = async (veterinarianId) => {
+  const query = `
+    SELECT
+      id,
+      veterinarian_id,
+      weekday,
+      start_time,
+      end_time,
+      slot_minutes,
+      is_active
+    FROM working_hours
+    WHERE veterinarian_id = $1
+      AND is_active = true
+    ORDER BY weekday, start_time
+  `;
+
+  const result = await pool.query(query, [veterinarianId]);
+  return result.rows;
+};
+
 module.exports = {
   createWorkingHour,
   findWorkingHourById,
   getAllWorkingHours,
   updateWorkingHourById,
   softDeleteWorkingHourById,
+  getWorkingHoursByVeterinarianId,
 };
