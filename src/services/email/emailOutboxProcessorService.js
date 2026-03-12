@@ -1,4 +1,4 @@
-const { resend } = require('../../configs/emailClient');
+const { transporter } = require('../../configs/emailClient');
 const {
   claimPendingEmailOutboxBatch,
   markEmailOutboxAsFailed,
@@ -6,8 +6,8 @@ const {
 } = require('../../models/emailOutboxModel');
 const { renderEmailTemplate } = require('./emailTemplateService');
 
-const sendEmailWithResend = async ({ to, subject, html, text }) => {
-  await resend.emails.send({
+const sendEmail = async ({ to, subject, html, text }) => {
+  await transporter.sendMail({
     from: process.env.MAIL_FROM,
     to,
     subject,
@@ -27,7 +27,7 @@ const processPendingEmailOutbox = async () => {
 
       const rendered = renderEmailTemplate(row.template, payload);
 
-      await sendEmailWithResend({
+      await sendEmail({
         to: row.to_email,
         subject: rendered.subject,
         html: rendered.html,

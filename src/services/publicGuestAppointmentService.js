@@ -1,21 +1,13 @@
-const ApiError = require("../utils/apiError");
+const ApiError = require('../utils/apiError');
 
-// Reutiliza tus modelos/servicios reales
-const { getAllAppointmentTypes } = require("../models/appointmentTypeModel");
-const { getAllVeterinarians } = require("../models/veterinarianModel");
-const {
-  getWorkingHoursByVeterinarianId,
-} = require("../models/workingHourModel");
-const { getTimeOffByVeterinarianAndDate } = require("../models/timeOffModel");
-const {
-  getAppointmentsByVeterinarianAndDate,
-  createAppointment,
-} = require("../models/appointmentModel");
-const { createGuestBooking } = require("../models/guestBookingModel");
+const { getAllAppointmentTypes } = require('../models/appointmentTypeModel');
+const { getAllVeterinarians } = require('../models/veterinarianModel');
+const { createAppointment } = require('../models/appointmentModel');
+const { createGuestBooking } = require('../models/guestBookingModel');
 const {
   enqueueGuestAppointmentConfirmationEmail,
-} = require("./email/emailNotificationService");
-const { createAppointmentEvent } = require("../models/appointmentEventModel");
+} = require('./email/emailNotificationService');
+const { createAppointmentEvent } = require('../models/appointmentEventModel');
 
 function buildStartsAt(date, time) {
   return new Date(`${date}T${time}:00`);
@@ -37,15 +29,15 @@ async function listPublicAvailableTimes({ veterinarianId, appointmentDate }) {
   if (!veterinarianId || !appointmentDate) {
     throw new ApiError(
       400,
-      "veterinarianId y appointmentDate son obligatorios.",
+      'veterinarianId y appointmentDate son obligatorios.'
     );
   }
 
   return [
-    { value: "09:00", label: "09:00" },
-    { value: "10:00", label: "10:00" },
-    { value: "11:30", label: "11:30" },
-    { value: "16:00", label: "16:00" },
+    { value: '09:00', label: '09:00' },
+    { value: '10:00', label: '10:00' },
+    { value: '11:30', label: '11:30' },
+    { value: '16:00', label: '16:00' },
   ];
 }
 
@@ -69,6 +61,17 @@ async function createPublicGuestAppointment(payload) {
   if (!selectedTime) {
     throw new ApiError(409, 'El horario seleccionado ya no está disponible.');
   }
+
+  const appointmentTypes = await getAllAppointmentTypes();
+  const veterinarians = await getAllVeterinarians();
+
+  const selectedAppointmentType = appointmentTypes.find(
+    (item) => item.id === payload.appointment.appointmentTypeId
+  );
+
+  const selectedVeterinarian = veterinarians.find(
+    (item) => item.id === payload.appointment.veterinarianId
+  );
 
   const appointment = await createAppointment({
     veterinarianId: payload.appointment.veterinarianId,
@@ -111,9 +114,11 @@ async function createPublicGuestAppointment(payload) {
     contactName: payload.contactName,
     petName: payload.pet.name,
     appointmentTypeName:
-      payload.appointment.appointmentTypeName || 'Consulta veterinaria',
+      selectedAppointmentType?.name || 'Consulta veterinaria',
     veterinarianName:
-      payload.appointment.veterinarianName || 'Profesional asignado',
+      selectedVeterinarian?.full_name ||
+      selectedVeterinarian?.username ||
+      'Profesional asignado',
     appointmentDate: payload.appointment.appointmentDate,
     appointmentTime: payload.appointment.appointmentTime,
     reason: payload.appointment.reason,

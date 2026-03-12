@@ -6,11 +6,13 @@ const createClient = async ({
   phone,
   documentId,
   address,
+  passwordHash = null,
   createdBy,
 }) => {
   const query = `
     INSERT INTO clients (
       email,
+      password_hash,
       full_name,
       phone,
       document_id,
@@ -21,7 +23,7 @@ const createClient = async ({
       created_at,
       updated_at
     )
-    VALUES ($1, $2, $3, $4, $5, true, $6, $6, NOW(), NOW())
+    VALUES ($1, $2, $3, $4, $5, $6, true, $7, $7, NOW(), NOW())
     RETURNING
       id,
       email,
@@ -36,7 +38,16 @@ const createClient = async ({
       updated_at
   `;
 
-  const values = [email, fullName, phone || null, documentId || null, address || null, createdBy];
+  const values = [
+    email,
+    passwordHash,
+    fullName,
+    phone || null,
+    documentId || null,
+    address || null,
+    createdBy,
+  ];
+
   const result = await pool.query(query, values);
   return result.rows[0];
 };
@@ -69,6 +80,54 @@ const findClientById = async (clientId) => {
     SELECT
       id,
       email,
+      full_name,
+      phone,
+      document_id,
+      address,
+      is_active,
+      created_by,
+      updated_by,
+      created_at,
+      updated_at
+    FROM clients
+    WHERE id = $1
+    LIMIT 1
+  `;
+
+  const result = await pool.query(query, [clientId]);
+  return result.rows[0] || null;
+};
+
+const findClientAuthByEmail = async (email) => {
+  const query = `
+    SELECT
+      id,
+      email,
+      password_hash,
+      full_name,
+      phone,
+      document_id,
+      address,
+      is_active,
+      created_by,
+      updated_by,
+      created_at,
+      updated_at
+    FROM clients
+    WHERE email = $1
+    LIMIT 1
+  `;
+
+  const result = await pool.query(query, [email]);
+  return result.rows[0] || null;
+};
+
+const findClientAuthById = async (clientId) => {
+  const query = `
+    SELECT
+      id,
+      email,
+      password_hash,
       full_name,
       phone,
       document_id,
@@ -146,7 +205,6 @@ const updateClientById = async (clientId, data, updatedBy) => {
 
   fields.push(`updated_by = $${index++}`);
   values.push(updatedBy);
-
   fields.push(`updated_at = NOW()`);
 
   values.push(clientId);
@@ -170,6 +228,33 @@ const updateClientById = async (clientId, data, updatedBy) => {
   `;
 
   const result = await pool.query(query, values);
+  return result.rows[0] || null;
+};
+
+const updateClientPasswordById = async (clientId, passwordHash, updatedBy) => {
+  const query = `
+    UPDATE clients
+    SET
+      password_hash = $2,
+      updated_by = $3,
+      updated_at = NOW()
+    WHERE id = $1
+    RETURNING
+      id,
+      email,
+      password_hash,
+      full_name,
+      phone,
+      document_id,
+      address,
+      is_active,
+      created_by,
+      updated_by,
+      created_at,
+      updated_at
+  `;
+
+  const result = await pool.query(query, [clientId, passwordHash, updatedBy]);
   return result.rows[0] || null;
 };
 
@@ -203,7 +288,10 @@ module.exports = {
   createClient,
   findClientByEmail,
   findClientById,
+  findClientAuthByEmail,
+  findClientAuthById,
   getAllClients,
   updateClientById,
+  updateClientPasswordById,
   softDeleteClientById,
 };

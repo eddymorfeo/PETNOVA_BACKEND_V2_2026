@@ -1,8 +1,8 @@
-const { buildEmailLayout, escapeHtml } = require('../../utils/emailHtml');
+const { buildEmailLayout, escapeHtml } = require("../../utils/emailHtml");
 
 const formatDateTime = (dateValue, timeValue) => {
-  const safeDate = escapeHtml(dateValue || '');
-  const safeTime = escapeHtml(timeValue || '');
+  const safeDate = escapeHtml(dateValue || "");
+  const safeTime = escapeHtml(timeValue || "");
   return `${safeDate} ${safeTime}`.trim();
 };
 
@@ -59,10 +59,10 @@ const renderGuestAppointmentConfirmation = (payload) => {
   `;
 
   return {
-    subject: 'Confirmación de reserva - PETNOVA',
+    subject: "Confirmación de reserva - PETNOVA",
     html: buildEmailLayout({
-      title: 'Confirmación de reserva',
-      previewText: 'Tu cita en PETNOVA fue registrada correctamente.',
+      title: "Confirmación de reserva",
+      previewText: "Tu cita en PETNOVA fue registrada correctamente.",
       bodyHtml,
     }),
     text: `Hola ${payload.contactName}. Tu reserva para ${payload.petName} fue registrada para ${payload.appointmentDate} ${payload.appointmentTime}.`,
@@ -80,14 +80,14 @@ const renderAccountCreated = (payload) => {
       Ya puedes acceder al portal del cliente usando tu correo:
       <strong>${escapeHtml(payload.email)}</strong>.
     </p>
-    ${buildCtaButton('Ir al portal', loginUrl)}
+    ${buildCtaButton("Ir al portal", loginUrl)}
   `;
 
   return {
-    subject: 'Tu cuenta PETNOVA fue creada',
+    subject: "Tu cuenta PETNOVA fue creada",
     html: buildEmailLayout({
-      title: 'Cuenta creada correctamente',
-      previewText: 'Tu cuenta PETNOVA ya está activa.',
+      title: "Cuenta creada correctamente",
+      previewText: "Tu cuenta PETNOVA ya está activa.",
       bodyHtml,
     }),
     text: `Hola ${payload.fullName}. Tu cuenta PETNOVA fue creada correctamente.`,
@@ -104,14 +104,14 @@ const renderPasswordReset = (payload) => {
     <p style="margin:0;font-size:15px;line-height:1.8;color:#475569;">
       Este enlace expirará según la configuración de seguridad del sistema.
     </p>
-    ${buildCtaButton('Restablecer contraseña', resetUrl)}
+    ${buildCtaButton("Restablecer contraseña", resetUrl)}
   `;
 
   return {
-    subject: 'Restablece tu contraseña - PETNOVA',
+    subject: "Restablece tu contraseña - PETNOVA",
     html: buildEmailLayout({
-      title: 'Restablece tu contraseña',
-      previewText: 'Usa este enlace para definir una nueva contraseña.',
+      title: "Restablece tu contraseña",
+      previewText: "Usa este enlace para definir una nueva contraseña.",
       bodyHtml,
     }),
     text: `Restablece tu contraseña desde este enlace: ${resetUrl}`,
@@ -131,10 +131,10 @@ const renderPetCreated = (payload) => {
   `;
 
   return {
-    subject: 'Nueva mascota registrada - PETNOVA',
+    subject: "Nueva mascota registrada - PETNOVA",
     html: buildEmailLayout({
-      title: 'Mascota registrada',
-      previewText: 'Se agregó una nueva mascota a tu cuenta.',
+      title: "Mascota registrada",
+      previewText: "Se agregó una nueva mascota a tu cuenta.",
       bodyHtml,
     }),
     text: `Se registró la mascota ${payload.petName} en tu cuenta.`,
@@ -149,10 +149,10 @@ const renderUserProfileUpdated = (payload) => {
   `;
 
   return {
-    subject: 'Tus datos fueron actualizados - PETNOVA',
+    subject: "Tus datos fueron actualizados - PETNOVA",
     html: buildEmailLayout({
-      title: 'Perfil actualizado',
-      previewText: 'Tus datos de usuario fueron actualizados.',
+      title: "Perfil actualizado",
+      previewText: "Tus datos de usuario fueron actualizados.",
       bodyHtml,
     }),
     text: `Tus datos fueron actualizados correctamente en PETNOVA.`,
@@ -172,10 +172,10 @@ const renderAppointmentCreated = (payload) => {
   `;
 
   return {
-    subject: 'Cita registrada - PETNOVA',
+    subject: "Cita registrada - PETNOVA",
     html: buildEmailLayout({
-      title: 'Cita registrada',
-      previewText: 'Tu cita médica fue registrada correctamente.',
+      title: "Cita registrada",
+      previewText: "Tu cita médica fue registrada correctamente.",
       bodyHtml,
     }),
     text: `Tu cita para ${payload.petName} fue registrada para ${payload.appointmentDate} ${payload.appointmentTime}.`,
@@ -193,10 +193,10 @@ const renderAppointmentRescheduled = (payload) => {
   `;
 
   return {
-    subject: 'Cita reagendada - PETNOVA',
+    subject: "Cita reagendada - PETNOVA",
     html: buildEmailLayout({
-      title: 'Cita reagendada',
-      previewText: 'Tu cita fue reagendada correctamente.',
+      title: "Cita reagendada",
+      previewText: "Tu cita fue reagendada correctamente.",
       bodyHtml,
     }),
     text: `Tu cita fue reagendada para ${payload.appointmentDate} ${payload.appointmentTime}.`,
@@ -209,18 +209,18 @@ const renderAppointmentCancelled = (payload) => {
       Tu cita fue cancelada.
     </p>
     <p style="margin:0;font-size:15px;line-height:1.8;color:#475569;">
-      <strong>Motivo:</strong> ${escapeHtml(payload.cancelReason || 'No informado')}
+      <strong>Motivo:</strong> ${escapeHtml(payload.cancelReason || "No informado")}
     </p>
   `;
 
   return {
-    subject: 'Cita cancelada - PETNOVA',
+    subject: "Cita cancelada - PETNOVA",
     html: buildEmailLayout({
-      title: 'Cita cancelada',
-      previewText: 'Tu cita fue cancelada.',
+      title: "Cita cancelada",
+      previewText: "Tu cita fue cancelada.",
       bodyHtml,
     }),
-    text: `Tu cita fue cancelada. Motivo: ${payload.cancelReason || 'No informado'}.`,
+    text: `Tu cita fue cancelada. Motivo: ${payload.cancelReason || "No informado"}.`,
   };
 };
 
@@ -236,10 +236,10 @@ const renderAppointmentReminder = (payload) => {
   `;
 
   return {
-    subject: 'Recordatorio de cita - PETNOVA',
+    subject: "Recordatorio de cita - PETNOVA",
     html: buildEmailLayout({
-      title: 'Recordatorio de cita',
-      previewText: 'Tu cita en PETNOVA está próxima.',
+      title: "Recordatorio de cita",
+      previewText: "Tu cita en PETNOVA está próxima.",
       bodyHtml,
     }),
     text: `Recordatorio: tu cita para ${payload.petName} es el ${payload.appointmentDate} a las ${payload.appointmentTime}.`,
@@ -248,27 +248,50 @@ const renderAppointmentReminder = (payload) => {
 
 const renderEmailTemplate = (template, payload) => {
   switch (template) {
-    case 'guest_appointment_confirmation':
+    case "guest_appointment_confirmation":
       return renderGuestAppointmentConfirmation(payload);
-    case 'account_created':
+    case "account_created":
       return renderAccountCreated(payload);
-    case 'password_reset':
+    case "password_reset":
       return renderPasswordReset(payload);
-    case 'pet_created':
+    case "pet_created":
       return renderPetCreated(payload);
-    case 'user_profile_updated':
+    case "user_profile_updated":
       return renderUserProfileUpdated(payload);
-    case 'appointment_created':
+    case "appointment_created":
       return renderAppointmentCreated(payload);
-    case 'appointment_rescheduled':
+    case "appointment_rescheduled":
       return renderAppointmentRescheduled(payload);
-    case 'appointment_cancelled':
+    case "appointment_cancelled":
       return renderAppointmentCancelled(payload);
-    case 'appointment_reminder':
+    case "appointment_reminder":
       return renderAppointmentReminder(payload);
+    case "password_changed":
+      return renderPasswordChanged(payload);
     default:
       throw new Error(`Plantilla de correo no soportada: ${template}`);
   }
+};
+
+const renderPasswordChanged = (payload) => {
+  const bodyHtml = `
+    <p style="margin:0;font-size:15px;line-height:1.8;">
+      Hola <strong>${escapeHtml(payload.fullName)}</strong>, tu contraseña fue actualizada correctamente en PETNOVA.
+    </p>
+    <p style="margin:16px 0 0;font-size:15px;line-height:1.8;color:#475569;">
+      Si no realizaste este cambio, te recomendamos contactarte inmediatamente con soporte.
+    </p>
+  `;
+
+  return {
+    subject: "Tu contraseña fue actualizada - PETNOVA",
+    html: buildEmailLayout({
+      title: "Contraseña actualizada",
+      previewText: "Tu contraseña fue cambiada correctamente.",
+      bodyHtml,
+    }),
+    text: `Hola ${payload.fullName}. Tu contraseña fue actualizada correctamente en PETNOVA.`,
+  };
 };
 
 module.exports = {

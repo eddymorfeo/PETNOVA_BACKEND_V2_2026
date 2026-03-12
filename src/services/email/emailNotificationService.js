@@ -183,6 +183,21 @@ const enqueueAppointmentReminderEmail = async ({
   });
 };
 
+const enqueuePasswordChangedEmail = async ({
+  toEmail,
+  fullName,
+  createdBy = null,
+}) => {
+  return enqueueEmail({
+    toEmail,
+    template: 'password_changed',
+    payload: {
+      fullName,
+    },
+    createdBy,
+  });
+};
+
 module.exports = {
   enqueueEmail,
   enqueueGuestAppointmentConfirmationEmail,
@@ -194,4 +209,5 @@ module.exports = {
   enqueueAppointmentRescheduledEmail,
   enqueueAppointmentCancelledEmail,
   enqueueAppointmentReminderEmail,
+  enqueuePasswordChangedEmail,
 };

@@ -1,4 +1,4 @@
-const pool = require('../db/db');
+const pool = require("../db/db");
 
 const createPasswordResetToken = async ({
   subjectType,
@@ -89,7 +89,11 @@ const getAllPasswordResetTokens = async () => {
   return result.rows;
 };
 
-const updatePasswordResetTokenById = async (passwordResetTokenId, data, updatedBy) => {
+const updatePasswordResetTokenById = async (
+  passwordResetTokenId,
+  data,
+  updatedBy,
+) => {
   const fields = [];
   const values = [];
   let index = 1;
@@ -118,7 +122,7 @@ const updatePasswordResetTokenById = async (passwordResetTokenId, data, updatedB
 
   const query = `
     UPDATE password_reset_tokens
-    SET ${fields.join(', ')}
+    SET ${fields.join(", ")}
     WHERE id = $${index}
     RETURNING
       id,
@@ -158,10 +162,101 @@ const deletePasswordResetTokenById = async (passwordResetTokenId) => {
   return result.rows[0] || null;
 };
 
+const findValidPasswordResetTokenByHash = async ({
+  subjectType,
+  tokenHash,
+}) => {
+  const query = `
+    SELECT
+      id,
+      subject_type,
+      subject_id,
+      token_hash,
+      expires_at,
+      used_at,
+      created_by,
+      updated_by,
+      created_at,
+      updated_at
+    FROM password_reset_tokens
+    WHERE subject_type = $1
+      AND token_hash = $2
+      AND used_at IS NULL
+      AND expires_at > NOW()
+    ORDER BY created_at DESC
+    LIMIT 1
+  `;
+
+  const result = await pool.query(query, [subjectType, tokenHash]);
+  return result.rows[0] || null;
+};
+
+const markPasswordResetTokenAsUsed = async (
+  passwordResetTokenId,
+  updatedBy,
+) => {
+  const query = `
+    UPDATE password_reset_tokens
+    SET
+      used_at = NOW(),
+      updated_by = $2,
+      updated_at = NOW()
+    WHERE id = $1
+    RETURNING
+      id,
+      subject_type,
+      subject_id,
+      token_hash,
+      expires_at,
+      used_at,
+      created_by,
+      updated_by,
+      created_at,
+      updated_at
+  `;
+
+  const result = await pool.query(query, [passwordResetTokenId, updatedBy]);
+  return result.rows[0] || null;
+};
+
+const invalidatePasswordResetTokensBySubject = async ({
+  subjectType,
+  subjectId,
+  updatedBy,
+}) => {
+  const query = `
+    UPDATE password_reset_tokens
+    SET
+      used_at = COALESCE(used_at, NOW()),
+      updated_by = $3,
+      updated_at = NOW()
+    WHERE subject_type = $1
+      AND subject_id = $2
+      AND used_at IS NULL
+    RETURNING
+      id,
+      subject_type,
+      subject_id,
+      token_hash,
+      expires_at,
+      used_at,
+      created_by,
+      updated_by,
+      created_at,
+      updated_at
+  `;
+
+  const result = await pool.query(query, [subjectType, subjectId, updatedBy]);
+  return result.rows;
+};
+
 module.exports = {
   createPasswordResetToken,
   findPasswordResetTokenById,
   getAllPasswordResetTokens,
   updatePasswordResetTokenById,
   deletePasswordResetTokenById,
+  findValidPasswordResetTokenByHash,
+  markPasswordResetTokenAsUsed,
+  invalidatePasswordResetTokensBySubject,
 };
