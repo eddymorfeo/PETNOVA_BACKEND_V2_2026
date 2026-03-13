@@ -75,9 +75,14 @@ const update = async (req, res, next) => {
       });
     }
 
-    const authenticatedUserId = req.auth.sub;
+    const authenticatedUserId =
+      req.auth?.type === 'client' ? null : req.auth?.sub ?? null;
 
-    const client = await updateClient(req.params.id, req.body, authenticatedUserId);
+    const client = await updateClient(
+      req.params.id,
+      req.body,
+      authenticatedUserId
+    );
 
     return res.status(200).json({
       success: true,
@@ -91,7 +96,8 @@ const update = async (req, res, next) => {
 
 const remove = async (req, res, next) => {
   try {
-    const authenticatedUserId = req.auth.sub;
+    const authenticatedUserId =
+      req.auth?.type === 'client' ? null : req.auth?.sub ?? null;
 
     const client = await deleteClient(req.params.id, authenticatedUserId);
 

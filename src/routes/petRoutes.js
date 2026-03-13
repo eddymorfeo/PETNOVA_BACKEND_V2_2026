@@ -8,6 +8,7 @@ router.use(requireAuth);
 
 router.post('/', petController.create);
 router.get('/', petController.findAll);
+router.get('/client/:clientId', petController.findByClient);
 router.get('/:id', petController.findOne);
 router.patch('/:id', petController.update);
 router.delete('/:id', petController.remove);

@@ -9,6 +9,7 @@ const {
   getPetDetail,
   updatePet,
   deletePet,
+  listPetsByClient,
 } = require('../services/petService');
 
 const create = async (req, res, next) => {
@@ -22,7 +23,9 @@ const create = async (req, res, next) => {
       });
     }
 
-    const authenticatedUserId = req.auth.sub;
+    const authenticatedUserId =
+      req.auth?.type === 'client' ? null : req.auth?.sub ?? null;
+
     const pet = await createNewPet(req.body, authenticatedUserId);
 
     return res.status(201).json({
@@ -74,7 +77,9 @@ const update = async (req, res, next) => {
       });
     }
 
-    const authenticatedUserId = req.auth.sub;
+    const authenticatedUserId =
+      req.auth?.type === 'client' ? null : req.auth?.sub ?? null;
+
     const pet = await updatePet(req.params.id, req.body, authenticatedUserId);
 
     return res.status(200).json({
@@ -89,7 +94,9 @@ const update = async (req, res, next) => {
 
 const remove = async (req, res, next) => {
   try {
-    const authenticatedUserId = req.auth.sub;
+    const authenticatedUserId =
+      req.auth?.type === 'client' ? null : req.auth?.sub ?? null;
+
     const pet = await deletePet(req.params.id, authenticatedUserId);
 
     return res.status(200).json({
@@ -102,10 +109,25 @@ const remove = async (req, res, next) => {
   }
 };
 
+const findByClient = async (req, res, next) => {
+  try {
+    const pets = await listPetsByClient(req.params.clientId);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Mascotas del cliente obtenidas correctamente.',
+      data: pets,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   create,
   findAll,
   findOne,
   update,
   remove,
+  findByClient,
 };

@@ -6,6 +6,7 @@ const {
   createPet,
   findPetById,
   getAllPets,
+  getPetsByClientId,
   updatePetById,
   softDeletePetById,
 } = require('../models/petModel');
@@ -86,10 +87,21 @@ const deletePet = async (petId, authenticatedUserId) => {
   return softDeletePetById(petId, authenticatedUserId);
 };
 
+const listPetsByClient = async (clientId) => {
+  const client = await findClientById(clientId);
+
+  if (!client) {
+    throw new ApiError(404, 'El cliente asociado no existe.');
+  }
+
+  return getPetsByClientId(clientId);
+};
+
 module.exports = {
   createNewPet,
   listPets,
   getPetDetail,
   updatePet,
   deletePet,
+  listPetsByClient,
 };

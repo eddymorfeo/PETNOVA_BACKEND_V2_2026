@@ -264,10 +264,40 @@ const softDeletePetById = async (petId, updatedBy) => {
   return result.rows[0] || null;
 };
 
+const getPetsByClientId = async (clientId) => {
+  const query = `
+    SELECT
+      id,
+      client_id,
+      name,
+      species_id,
+      breed_id,
+      sex,
+      birth_date,
+      color,
+      microchip,
+      is_sterilized,
+      allergies,
+      notes,
+      is_active,
+      created_by,
+      updated_by,
+      created_at,
+      updated_at
+    FROM pets
+    WHERE client_id = $1
+    ORDER BY created_at DESC
+  `;
+
+  const result = await pool.query(query, [clientId]);
+  return result.rows;
+};
+
 module.exports = {
   createPet,
   findPetById,
   getAllPets,
   updatePetById,
   softDeletePetById,
+  getPetsByClientId,
 };
