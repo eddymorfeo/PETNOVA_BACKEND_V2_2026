@@ -26,7 +26,14 @@ const create = async (req, res, next) => {
     const authenticatedUserId =
       req.auth?.type === 'client' ? null : req.auth?.sub ?? null;
 
-    const pet = await createNewPet(req.body, authenticatedUserId);
+    const authenticatedClientId =
+      req.auth?.type === 'client' ? req.auth?.sub ?? null : null;
+
+    const pet = await createNewPet(
+      req.body,
+      authenticatedUserId,
+      authenticatedClientId
+    );
 
     return res.status(201).json({
       success: true,
@@ -54,7 +61,10 @@ const findAll = async (req, res, next) => {
 
 const findOne = async (req, res, next) => {
   try {
-    const pet = await getPetDetail(req.params.id);
+    const authenticatedClientId =
+      req.auth?.type === 'client' ? req.auth?.sub ?? null : null;
+
+    const pet = await getPetDetail(req.params.id, authenticatedClientId);
 
     return res.status(200).json({
       success: true,
@@ -80,7 +90,15 @@ const update = async (req, res, next) => {
     const authenticatedUserId =
       req.auth?.type === 'client' ? null : req.auth?.sub ?? null;
 
-    const pet = await updatePet(req.params.id, req.body, authenticatedUserId);
+    const authenticatedClientId =
+      req.auth?.type === 'client' ? req.auth?.sub ?? null : null;
+
+    const pet = await updatePet(
+      req.params.id,
+      req.body,
+      authenticatedUserId,
+      authenticatedClientId
+    );
 
     return res.status(200).json({
       success: true,
@@ -97,7 +115,14 @@ const remove = async (req, res, next) => {
     const authenticatedUserId =
       req.auth?.type === 'client' ? null : req.auth?.sub ?? null;
 
-    const pet = await deletePet(req.params.id, authenticatedUserId);
+    const authenticatedClientId =
+      req.auth?.type === 'client' ? req.auth?.sub ?? null : null;
+
+    const pet = await deletePet(
+      req.params.id,
+      authenticatedUserId,
+      authenticatedClientId
+    );
 
     return res.status(200).json({
       success: true,
@@ -111,7 +136,13 @@ const remove = async (req, res, next) => {
 
 const findByClient = async (req, res, next) => {
   try {
-    const pets = await listPetsByClient(req.params.clientId);
+    const authenticatedClientId =
+      req.auth?.type === 'client' ? req.auth?.sub ?? null : null;
+
+    const pets = await listPetsByClient(
+      req.params.clientId,
+      authenticatedClientId
+    );
 
     return res.status(200).json({
       success: true,
