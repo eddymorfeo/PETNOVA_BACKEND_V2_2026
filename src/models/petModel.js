@@ -1,4 +1,4 @@
-const pool = require('../db/db');
+const pool = require("../db/db");
 
 const createPet = async ({
   clientId,
@@ -125,6 +125,7 @@ const getAllPets = async () => {
       created_at,
       updated_at
     FROM pets
+    WHERE is_active = 'true'
     ORDER BY created_at DESC
   `;
 
@@ -206,7 +207,7 @@ const updatePetById = async (petId, data, updatedBy) => {
 
   const query = `
     UPDATE pets
-    SET ${fields.join(', ')}
+    SET ${fields.join(", ")}
     WHERE id = $${index}
     RETURNING
       id,
