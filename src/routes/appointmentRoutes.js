@@ -5,7 +5,7 @@ const requireAuth = require('../middlewares/requireAuth');
 const router = express.Router();
 
 router.use(requireAuth);
-
+router.get('/my', appointmentController.findMine);
 router.post('/', appointmentController.create);
 router.get('/', appointmentController.findAll);
 router.get('/:id', appointmentController.findOne);

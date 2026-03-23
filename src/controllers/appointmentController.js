@@ -3,10 +3,10 @@ const {
   validateUpdateAppointment,
   validateDeleteAppointment,
 } = require('../schemas/appointmentSchemas');
-
 const {
   createNewAppointment,
   listAppointments,
+  listMyAppointments,
   getAppointmentDetail,
   updateAppointment,
   deleteAppointment,
@@ -23,7 +23,7 @@ const create = async (req, res, next) => {
       });
     }
 
-    const appointment = await createNewAppointment(req.body, req.auth.sub);
+    const appointment = await createNewAppointment(req.body, req.auth);
 
     return res.status(201).json({
       success: true,
@@ -37,7 +37,7 @@ const create = async (req, res, next) => {
 
 const findAll = async (req, res, next) => {
   try {
-    const appointments = await listAppointments();
+    const appointments = await listAppointments(req.auth);
 
     return res.status(200).json({
       success: true,
@@ -49,9 +49,23 @@ const findAll = async (req, res, next) => {
   }
 };
 
+const findMine = async (req, res, next) => {
+  try {
+    const appointments = await listMyAppointments(req.auth);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Mis citas obtenidas correctamente.',
+      data: appointments,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const findOne = async (req, res, next) => {
   try {
-    const appointment = await getAppointmentDetail(req.params.id);
+    const appointment = await getAppointmentDetail(req.params.id, req.auth);
 
     return res.status(200).json({
       success: true,
@@ -74,7 +88,7 @@ const update = async (req, res, next) => {
       });
     }
 
-    const appointment = await updateAppointment(req.params.id, req.body, req.auth.sub);
+    const appointment = await updateAppointment(req.params.id, req.body, req.auth);
 
     return res.status(200).json({
       success: true,
@@ -100,7 +114,7 @@ const remove = async (req, res, next) => {
     const appointment = await deleteAppointment(
       req.params.id,
       req.body.cancelReason,
-      req.auth.sub
+      req.auth,
     );
 
     return res.status(200).json({
@@ -116,6 +130,7 @@ const remove = async (req, res, next) => {
 module.exports = {
   create,
   findAll,
+  findMine,
   findOne,
   update,
   remove,
