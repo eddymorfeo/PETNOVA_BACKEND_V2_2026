@@ -3,22 +3,16 @@ const isValidDateString = (value) => {
 };
 
 const validateCreatePublicGuestAppointment = (body) => {
-  const {
-    contactName,
-    contactEmail,
-    contactPhone,
-    pet,
-    appointment,
-  } = body;
+  const { contactName, contactEmail, contactPhone, pet, appointment } = body;
 
-  if (!contactName || !contactEmail || !contactPhone || !pet || !appointment) {
+  if (!contactName || !contactEmail || !pet || !appointment) {
     return {
       success: false,
-      message: 'contactName, contactEmail, contactPhone, pet y appointment son obligatorios.',
+      message: 'contactName, contactEmail, pet y appointment son obligatorios.',
     };
   }
 
-  if (typeof contactName !== 'string' || typeof contactEmail !== 'string' || typeof contactPhone !== 'string') {
+  if (typeof contactName !== 'string' || typeof contactEmail !== 'string') {
     return {
       success: false,
       message: 'Los datos de contacto deben ser texto.',
@@ -26,16 +20,32 @@ const validateCreatePublicGuestAppointment = (body) => {
   }
 
   if (
-    !pet.name ||
-    !pet.species ||
-    !pet.breed ||
-    typeof pet.name !== 'string' ||
-    typeof pet.species !== 'string' ||
-    typeof pet.breed !== 'string'
+    contactPhone !== undefined &&
+    contactPhone !== null &&
+    typeof contactPhone !== 'string'
   ) {
     return {
       success: false,
-      message: 'pet.name, pet.species y pet.breed son obligatorios.',
+      message: 'contactPhone debe ser texto cuando se informa.',
+    };
+  }
+
+  if (
+    !pet.name ||
+    !pet.species ||
+    typeof pet.name !== 'string' ||
+    typeof pet.species !== 'string'
+  ) {
+    return {
+      success: false,
+      message: 'pet.name y pet.species son obligatorios.',
+    };
+  }
+
+  if (pet.breed !== undefined && pet.breed !== null && typeof pet.breed !== 'string') {
+    return {
+      success: false,
+      message: 'pet.breed debe ser texto cuando se informa.',
     };
   }
 
@@ -43,12 +53,12 @@ const validateCreatePublicGuestAppointment = (body) => {
     !appointment.appointmentTypeId ||
     !appointment.veterinarianId ||
     !appointment.appointmentDate ||
-    !appointment.appointmentTime ||
-    !appointment.reason
+    !appointment.appointmentTime
   ) {
     return {
       success: false,
-      message: 'appointmentTypeId, veterinarianId, appointmentDate, appointmentTime y reason son obligatorios.',
+      message:
+        'appointmentTypeId, veterinarianId, appointmentDate y appointmentTime son obligatorios.',
     };
   }
 
@@ -56,12 +66,22 @@ const validateCreatePublicGuestAppointment = (body) => {
     typeof appointment.appointmentTypeId !== 'string' ||
     typeof appointment.veterinarianId !== 'string' ||
     typeof appointment.appointmentDate !== 'string' ||
-    typeof appointment.appointmentTime !== 'string' ||
+    typeof appointment.appointmentTime !== 'string'
+  ) {
+    return {
+      success: false,
+      message: 'Los datos principales de appointment deben ser texto.',
+    };
+  }
+
+  if (
+    appointment.reason !== undefined &&
+    appointment.reason !== null &&
     typeof appointment.reason !== 'string'
   ) {
     return {
       success: false,
-      message: 'Los datos de appointment deben ser texto.',
+      message: 'appointment.reason debe ser texto cuando se informa.',
     };
   }
 

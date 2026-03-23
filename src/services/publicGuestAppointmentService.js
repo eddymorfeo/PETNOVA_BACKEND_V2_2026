@@ -1,7 +1,8 @@
 const ApiError = require('../utils/apiError');
-
 const { getAllAppointmentTypes } = require('../models/appointmentTypeModel');
 const { getAllVeterinarians } = require('../models/veterinarianModel');
+const { getAllSpecies } = require('../models/speciesModel');
+const { getAllBreeds } = require('../models/breedModel');
 const { createAppointment } = require('../models/appointmentModel');
 const { createGuestBooking } = require('../models/guestBookingModel');
 const {
@@ -23,6 +24,23 @@ async function listPublicAppointmentTypes() {
 
 async function listPublicVeterinarians() {
   return getAllVeterinarians();
+}
+
+async function listPublicSpecies() {
+  const species = await getAllSpecies();
+  return species.filter((item) => item.is_active !== false);
+}
+
+async function listPublicBreedsBySpecies(speciesId) {
+  if (!speciesId) {
+    throw new ApiError(400, 'speciesId es obligatorio.');
+  }
+
+  const breeds = await getAllBreeds();
+
+  return breeds.filter(
+    (item) => item.is_active !== false && item.species_id === speciesId
+  );
 }
 
 async function listPublicAvailableTimes({ veterinarianId, appointmentDate }) {
@@ -81,7 +99,7 @@ async function createPublicGuestAppointment(payload) {
     startsAt: startsAt.toISOString(),
     endsAt: endsAt.toISOString(),
     status: 'SCHEDULED',
-    reason: payload.appointment.reason,
+    reason: payload.appointment.reason || null,
     bookedSource: 'guest_portal',
     bookedByUserId: null,
     createdBy: null,
@@ -91,7 +109,7 @@ async function createPublicGuestAppointment(payload) {
     appointmentId: appointment.id,
     contactEmail: payload.contactEmail,
     contactName: payload.contactName,
-    contactPhone: payload.contactPhone,
+    contactPhone: payload.contactPhone || null,
     invitationSentAt: null,
     convertedClientId: null,
     createdBy: null,
@@ -121,7 +139,7 @@ async function createPublicGuestAppointment(payload) {
       'Profesional asignado',
     appointmentDate: payload.appointment.appointmentDate,
     appointmentTime: payload.appointment.appointmentTime,
-    reason: payload.appointment.reason,
+    reason: payload.appointment.reason || 'Sin motivo informado',
     createdBy: null,
   });
 
@@ -136,5 +154,7 @@ module.exports = {
   createPublicGuestAppointment,
   listPublicAppointmentTypes,
   listPublicVeterinarians,
+  listPublicSpecies,
+  listPublicBreedsBySpecies,
   listPublicAvailableTimes,
 };

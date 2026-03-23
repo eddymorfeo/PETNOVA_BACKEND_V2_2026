@@ -7,6 +7,8 @@ const {
   listPublicAppointmentTypes,
   listPublicVeterinarians,
   listPublicAvailableTimes,
+  listPublicSpecies,
+  listPublicBreedsBySpecies,
 } = require('../services/publicGuestAppointmentService');
 
 const create = async (req, res, next) => {
@@ -60,6 +62,35 @@ const listVeterinarians = async (req, res, next) => {
   }
 };
 
+const listSpecies = async (req, res, next) => {
+  try {
+    const data = await listPublicSpecies();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Especies obtenidas correctamente.',
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const listBreeds = async (req, res, next) => {
+  try {
+    const { speciesId } = req.query;
+    const data = await listPublicBreedsBySpecies(speciesId);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Razas obtenidas correctamente.',
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const listAvailableTimes = async (req, res, next) => {
   try {
     const { veterinarianId, appointmentDate } = req.query;
@@ -83,5 +114,7 @@ module.exports = {
   create,
   listAppointmentTypes,
   listVeterinarians,
+  listSpecies,
+  listBreeds,
   listAvailableTimes,
 };
