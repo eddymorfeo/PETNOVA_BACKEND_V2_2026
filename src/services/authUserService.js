@@ -1,7 +1,59 @@
 const ApiError = require('../utils/apiError');
 const { comparePassword } = require('../utils/password');
 const { generateAccessToken } = require('../configs/jwt');
-const { findUserByUsername, findRolesByUserId, findUserById  } = require('../models/userModel');
+const {
+  findUserByUsername,
+  findRolesByUserId,
+  findPermissionsByUserId,
+  findUserById,
+} = require('../models/userModel');
+
+const mapAuthenticatedUser = (user) => ({
+  id: user.id,
+  username: user.username,
+  email: user.email,
+  fullName: user.full_name,
+  phone: user.phone,
+  isActive: user.is_active,
+  createdBy: user.created_by ?? null,
+  updatedBy: user.updated_by ?? null,
+  createdAt: user.created_at ?? null,
+  updatedAt: user.updated_at ?? null,
+});
+
+const buildAccessibleModules = (permissions) => {
+  const modulesMap = new Map();
+
+  for (const permission of permissions) {
+    const moduleKey = permission.module;
+
+    if (!modulesMap.has(moduleKey)) {
+      modulesMap.set(moduleKey, {
+        code: moduleKey,
+        permissions: [],
+      });
+    }
+
+    modulesMap.get(moduleKey).permissions.push(permission.code);
+  }
+
+  return Array.from(modulesMap.values()).sort((leftModule, rightModule) =>
+    leftModule.code.localeCompare(rightModule.code)
+  );
+};
+
+const buildAuthenticatedSession = async (user) => {
+  const roles = await findRolesByUserId(user.id);
+  const permissions = await findPermissionsByUserId(user.id);
+  const modules = buildAccessibleModules(permissions);
+
+  return {
+    user: mapAuthenticatedUser(user),
+    roles,
+    permissions,
+    modules,
+  };
+};
 
 const loginUser = async ({ username, password }) => {
   const user = await findUserByUsername(username);
@@ -20,30 +72,23 @@ const loginUser = async ({ username, password }) => {
     throw new ApiError(401, 'Credenciales inválidas.');
   }
 
-  const roles = await findRolesByUserId(user.id);
+  const session = await buildAuthenticatedSession(user);
 
   const accessToken = generateAccessToken({
     sub: user.id,
     username: user.username,
     email: user.email,
-    roles: roles.map((role) => role.code),
+    roles: session.roles.map((role) => role.code),
+    permissions: session.permissions.map((permission) => permission.code),
   });
 
   return {
     accessToken,
-    user: {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      fullName: user.full_name,
-      phone: user.phone,
-      isActive: user.is_active,
-      roles,
-    },
+    ...session,
   };
 };
 
-const getAuthenticatedUser = async (userId) => {
+const getAuthenticatedSession = async (userId) => {
   const user = await findUserById(userId);
 
   if (!user) {
@@ -54,19 +99,10 @@ const getAuthenticatedUser = async (userId) => {
     throw new ApiError(403, 'El usuario se encuentra inactivo.');
   }
 
-  const roles = await findRolesByUserId(user.id);
-
-  return {
-    id: user.id,
-    username: user.username,
-    email: user.email,
-    fullName: user.full_name,
-    phone: user.phone,
-    isActive: user.is_active,
-    roles,
-  };
+  return buildAuthenticatedSession(user);
 };
+
 module.exports = {
   loginUser,
-  getAuthenticatedUser
+  getAuthenticatedSession,
 };

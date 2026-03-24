@@ -1,5 +1,8 @@
 const { validateUserLogin } = require('../schemas/authUserSchemas');
-const { loginUser, getAuthenticatedUser  } = require('../services/authUserService');
+const {
+  loginUser,
+  getAuthenticatedSession,
+} = require('../services/authUserService');
 
 const login = async (req, res, next) => {
   try {
@@ -27,13 +30,27 @@ const login = async (req, res, next) => {
 const me = async (req, res, next) => {
   try {
     const userId = req.auth.sub;
-
-    const user = await getAuthenticatedUser(userId);
+    const session = await getAuthenticatedSession(userId);
 
     return res.status(200).json({
       success: true,
-      message: 'Usuario autenticado obtenido correctamente.',
-      data: user,
+      message: 'Sesión autenticada obtenida correctamente.',
+      data: session,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const session = async (req, res, next) => {
+  try {
+    const userId = req.auth.sub;
+    const authenticatedSession = await getAuthenticatedSession(userId);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Sesión administrativa obtenida correctamente.',
+      data: authenticatedSession,
     });
   } catch (error) {
     next(error);
@@ -42,5 +59,6 @@ const me = async (req, res, next) => {
 
 module.exports = {
   login,
-  me
+  me,
+  session,
 };

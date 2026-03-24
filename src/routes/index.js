@@ -35,6 +35,7 @@ const systemSettingRoutes = require('./systemSettingRoutes');
 const auditLogRoutes = require('./auditLogRoutes');
 const publicGuestAppointmentRoutes = require('./publicGuestAppointmentRoutes');
 const authClientRoutes = require('./authClientRoutes');
+const clientMedicalRecordRoutes = require("./clientMedicalRecordRoutes");
 
 //Ruta sin autenticación JWT
 router.use('/auth/users', authUserRoutes);
@@ -74,5 +75,6 @@ router.use('/appointment-events', appointmentEventRoutes);
 router.use('/email-outbox', emailOutboxRoutes);
 router.use('/system-settings', systemSettingRoutes);
 router.use('/audit-logs', auditLogRoutes);
+router.use("/client-medical-records", clientMedicalRecordRoutes);
 
 module.exports = router;

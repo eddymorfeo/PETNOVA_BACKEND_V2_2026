@@ -83,6 +83,29 @@ const findRolesByUserId = async (userId) => {
   return result.rows;
 };
 
+const findPermissionsByUserId = async (userId) => {
+  const query = `
+    SELECT DISTINCT
+      p.id,
+      p.code,
+      p.name,
+      p.description,
+      p.module,
+      p.is_active
+    FROM user_roles ur
+    INNER JOIN role_permissions rp
+      ON rp.role_id = ur.role_id
+    INNER JOIN permissions p
+      ON p.id = rp.permission_id
+    WHERE ur.user_id = $1
+      AND p.is_active = true
+    ORDER BY p.module ASC, p.code ASC
+  `;
+
+  const result = await pool.query(query, [userId]);
+  return result.rows;
+};
+
 const createUser = async ({
   username,
   email,
@@ -241,4 +264,5 @@ module.exports = {
   getAllUsers,
   updateUserById,
   softDeleteUserById,
+  findPermissionsByUserId,
 };
