@@ -10,6 +10,15 @@ const {
   updateAppointmentById,
   cancelAppointmentById,
 } = require('../models/appointmentModel');
+const {
+  enqueueAppointmentCreatedEmail,
+  enqueueAppointmentRescheduledEmail,
+  enqueueAppointmentUpdatedEmail,
+  enqueueAppointmentCancelledEmail,
+} = require('./email/emailNotificationService');
+
+const APPOINTMENT_NOTIFICATION_TIME_ZONE =
+  process.env.APP_TIMEZONE || 'America/Santiago';
 
 const validateAppointmentRange = (startsAt, endsAt) => {
   const starts = new Date(startsAt);
@@ -73,6 +82,143 @@ const assertClientOwnership = (appointment, auth) => {
   }
 };
 
+const formatAppointmentDate = (dateValue) => {
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return new Intl.DateTimeFormat('es-CL', {
+    timeZone: APPOINTMENT_NOTIFICATION_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+};
+
+const formatAppointmentTime = (dateValue) => {
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return new Intl.DateTimeFormat('es-CL', {
+    timeZone: APPOINTMENT_NOTIFICATION_TIME_ZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date);
+};
+
+const getAppointmentNotificationEmail = (appointment) => {
+  return appointment?.client_email || appointment?.guest_contact_email || null;
+};
+
+const buildAppointmentNotificationPayload = (appointment) => {
+  if (!appointment) {
+    return null;
+  }
+
+  return {
+    toEmail: getAppointmentNotificationEmail(appointment),
+    petName: appointment.pet_name || 'No informada',
+    appointmentDate: formatAppointmentDate(appointment.starts_at),
+    appointmentTime: formatAppointmentTime(appointment.starts_at),
+    veterinarianName: appointment.veterinarian_name || 'Profesional asignado',
+  };
+};
+
+const valuesChanged = (left, right) => {
+  if (left === undefined || right === undefined) {
+    return false;
+  }
+
+  return String(left) !== String(right);
+};
+
+const appointmentDateTimeChanged = (currentAppointment, updatedAppointment) => {
+  if (!currentAppointment || !updatedAppointment) {
+    return false;
+  }
+
+  return (
+    valuesChanged(currentAppointment.starts_at, updatedAppointment.starts_at) ||
+    valuesChanged(currentAppointment.ends_at, updatedAppointment.ends_at) ||
+    valuesChanged(currentAppointment.veterinarian_id, updatedAppointment.veterinarian_id)
+  );
+};
+
+const notifyAppointmentCreated = async (appointment, createdBy) => {
+  const payload = buildAppointmentNotificationPayload(appointment);
+
+  if (!payload?.toEmail) {
+    return;
+  }
+
+  await enqueueAppointmentCreatedEmail({
+    ...payload,
+    createdBy,
+  });
+};
+
+const notifyAppointmentUpdated = async ({
+  currentAppointment,
+  updatedAppointment,
+  cancelReason,
+  updatedBy,
+}) => {
+  const payload = buildAppointmentNotificationPayload(updatedAppointment);
+
+  if (!payload?.toEmail) {
+    return;
+  }
+
+  if (
+    updatedAppointment.status === 'CANCELLED' &&
+    currentAppointment.status !== 'CANCELLED'
+  ) {
+    await enqueueAppointmentCancelledEmail({
+      toEmail: payload.toEmail,
+      cancelReason: cancelReason || updatedAppointment.cancel_reason,
+      createdBy: updatedBy,
+    });
+    return;
+  }
+
+  if (appointmentDateTimeChanged(currentAppointment, updatedAppointment)) {
+    await enqueueAppointmentRescheduledEmail({
+      ...payload,
+      createdBy: updatedBy,
+    });
+    return;
+  }
+
+  await enqueueAppointmentUpdatedEmail({
+    ...payload,
+    createdBy: updatedBy,
+  });
+};
+
+const notifyAppointmentCancelled = async ({
+  updatedAppointment,
+  cancelReason,
+  updatedBy,
+}) => {
+  const payload = buildAppointmentNotificationPayload(updatedAppointment);
+
+  if (!payload?.toEmail) {
+    return;
+  }
+
+  await enqueueAppointmentCancelledEmail({
+    toEmail: payload.toEmail,
+    cancelReason: cancelReason || updatedAppointment.cancel_reason,
+    createdBy: updatedBy,
+  });
+};
+
 const resolveCreateContext = async (payload, auth) => {
   const isClient = auth?.type === 'client';
   const authenticatedUserId = !isClient ? auth?.sub ?? null : null;
@@ -117,13 +263,22 @@ const createNewAppointment = async (payload, auth) => {
 
   validateAppointmentRange(payload.startsAt, payload.endsAt);
 
-  return createAppointment({
+  const appointment = await createAppointment({
     ...payload,
     clientId: resolvedClientId,
     status: payload.status || 'SCHEDULED',
     bookedByUserId: authenticatedUserId,
     createdBy: authenticatedUserId,
   });
+
+  const detailedAppointment = await findAppointmentById(appointment.id);
+
+  await notifyAppointmentCreated(
+    detailedAppointment || appointment,
+    authenticatedUserId,
+  );
+
+  return detailedAppointment || appointment;
 };
 
 const listAppointments = async (auth = null) => {
@@ -197,7 +352,18 @@ const updateAppointment = async (appointmentId, payload, auth) => {
 
   const authenticatedUserId = auth?.type === 'client' ? null : auth?.sub ?? null;
 
-  return updateAppointmentById(appointmentId, payload, authenticatedUserId);
+  await updateAppointmentById(appointmentId, payload, authenticatedUserId);
+
+  const updatedAppointment = await findAppointmentById(appointmentId);
+
+  await notifyAppointmentUpdated({
+    currentAppointment,
+    updatedAppointment,
+    cancelReason: payload.cancelReason,
+    updatedBy: authenticatedUserId,
+  });
+
+  return updatedAppointment;
 };
 
 const deleteAppointment = async (appointmentId, cancelReason, auth) => {
@@ -211,7 +377,17 @@ const deleteAppointment = async (appointmentId, cancelReason, auth) => {
 
   const authenticatedUserId = auth?.type === 'client' ? null : auth?.sub ?? null;
 
-  return cancelAppointmentById(appointmentId, cancelReason, authenticatedUserId);
+  await cancelAppointmentById(appointmentId, cancelReason, authenticatedUserId);
+
+  const updatedAppointment = await findAppointmentById(appointmentId);
+
+  await notifyAppointmentCancelled({
+    updatedAppointment,
+    cancelReason,
+    updatedBy: authenticatedUserId,
+  });
+
+  return updatedAppointment;
 };
 
 module.exports = {

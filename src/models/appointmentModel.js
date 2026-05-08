@@ -89,14 +89,18 @@ const findAppointmentById = async (appointmentId) => {
       a.updated_at,
       u.full_name AS veterinarian_name,
       c.full_name AS client_name,
+      c.email AS client_email,
       p.name AS pet_name,
-      at.name AS appointment_type_name
+      at.name AS appointment_type_name,
+      gb.contact_email AS guest_contact_email,
+      gb.contact_name AS guest_contact_name
     FROM appointments a
     INNER JOIN veterinarians v ON v.id = a.veterinarian_id
     INNER JOIN users u ON u.id = v.user_id
     LEFT JOIN clients c ON c.id = a.client_id
     LEFT JOIN pets p ON p.id = a.pet_id
     LEFT JOIN appointment_types at ON at.id = a.appointment_type_id
+    LEFT JOIN guest_bookings gb ON gb.appointment_id = a.id
     WHERE a.id = $1
     LIMIT 1
   `;
@@ -126,14 +130,18 @@ const getAllAppointments = async () => {
       a.updated_at,
       u.full_name AS veterinarian_name,
       c.full_name AS client_name,
+      c.email AS client_email,
       p.name AS pet_name,
-      at.name AS appointment_type_name
+      at.name AS appointment_type_name,
+      gb.contact_email AS guest_contact_email,
+      gb.contact_name AS guest_contact_name
     FROM appointments a
     INNER JOIN veterinarians v ON v.id = a.veterinarian_id
     INNER JOIN users u ON u.id = v.user_id
     LEFT JOIN clients c ON c.id = a.client_id
     LEFT JOIN pets p ON p.id = a.pet_id
     LEFT JOIN appointment_types at ON at.id = a.appointment_type_id
+    LEFT JOIN guest_bookings gb ON gb.appointment_id = a.id
     ORDER BY a.created_at DESC
   `;
 

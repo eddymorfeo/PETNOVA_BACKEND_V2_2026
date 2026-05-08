@@ -7,6 +7,10 @@ const {
   updateClientById,
   softDeleteClientById,
 } = require('../models/clientModel');
+const {
+  enqueueClientCreatedEmail,
+  enqueueUserProfileUpdatedEmail,
+} = require('./email/emailNotificationService');
 
 const createNewClient = async (payload, authenticatedUserId) => {
   const existingClient = await findClientByEmail(payload.email);
@@ -15,10 +19,18 @@ const createNewClient = async (payload, authenticatedUserId) => {
     throw new ApiError(409, 'Ya existe un cliente registrado con ese email.');
   }
 
-  return createClient({
+  const client = await createClient({
     ...payload,
     createdBy: authenticatedUserId,
   });
+
+  await enqueueClientCreatedEmail({
+    toEmail: client.email,
+    fullName: client.full_name,
+    createdBy: authenticatedUserId,
+  });
+
+  return client;
 };
 
 const listClients = async () => {
@@ -50,7 +62,24 @@ const updateClient = async (clientId, payload, authenticatedUserId) => {
     }
   }
 
-  return updateClientById(clientId, payload, authenticatedUserId);
+  const updatedClient = await updateClientById(clientId, payload, authenticatedUserId);
+
+  const notificationEmails = [
+    currentClient.email,
+    updatedClient.email,
+  ].filter((email, index, emails) => email && emails.indexOf(email) === index);
+
+  await Promise.all(
+    notificationEmails.map((toEmail) =>
+      enqueueUserProfileUpdatedEmail({
+        toEmail,
+        fullName: updatedClient.full_name,
+        createdBy: authenticatedUserId,
+      })
+    )
+  );
+
+  return updatedClient;
 };
 
 const deleteClient = async (clientId, authenticatedUserId) => {

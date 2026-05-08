@@ -60,6 +60,21 @@ const enqueueAccountCreatedEmail = async ({
   });
 };
 
+const enqueueClientCreatedEmail = async ({
+  toEmail,
+  fullName,
+  createdBy = null,
+}) => {
+  return enqueueEmail({
+    toEmail,
+    template: 'client_created',
+    payload: {
+      fullName,
+    },
+    createdBy,
+  });
+};
+
 const enqueuePasswordResetEmail = async ({
   toEmail,
   token,
@@ -132,16 +147,41 @@ const enqueueAppointmentCreatedEmail = async ({
 
 const enqueueAppointmentRescheduledEmail = async ({
   toEmail,
+  petName,
   appointmentDate,
   appointmentTime,
+  veterinarianName,
   createdBy = null,
 }) => {
   return enqueueEmail({
     toEmail,
     template: 'appointment_rescheduled',
     payload: {
+      petName,
       appointmentDate,
       appointmentTime,
+      veterinarianName,
+    },
+    createdBy,
+  });
+};
+
+const enqueueAppointmentUpdatedEmail = async ({
+  toEmail,
+  petName,
+  appointmentDate,
+  appointmentTime,
+  veterinarianName,
+  createdBy = null,
+}) => {
+  return enqueueEmail({
+    toEmail,
+    template: 'appointment_updated',
+    payload: {
+      petName,
+      appointmentDate,
+      appointmentTime,
+      veterinarianName,
     },
     createdBy,
   });
@@ -202,11 +242,13 @@ module.exports = {
   enqueueEmail,
   enqueueGuestAppointmentConfirmationEmail,
   enqueueAccountCreatedEmail,
+  enqueueClientCreatedEmail,
   enqueuePasswordResetEmail,
   enqueuePetCreatedEmail,
   enqueueUserProfileUpdatedEmail,
   enqueueAppointmentCreatedEmail,
   enqueueAppointmentRescheduledEmail,
+  enqueueAppointmentUpdatedEmail,
   enqueueAppointmentCancelledEmail,
   enqueueAppointmentReminderEmail,
   enqueuePasswordChangedEmail,

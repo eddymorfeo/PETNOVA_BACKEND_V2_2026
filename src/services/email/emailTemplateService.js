@@ -94,6 +94,27 @@ const renderAccountCreated = (payload) => {
   };
 };
 
+const renderClientCreated = (payload) => {
+  const bodyHtml = `
+    <p style="margin:0;font-size:15px;line-height:1.8;">
+      Hola <strong>${escapeHtml(payload.fullName)}</strong>, tus datos fueron registrados correctamente en PETNOVA.
+    </p>
+    <p style="margin:16px 0 0;font-size:15px;line-height:1.8;color:#475569;">
+      Si necesitas actualizar tu informaciÃ³n o agendar una atenciÃ³n, comunÃ­cate con PETNOVA.
+    </p>
+  `;
+
+  return {
+    subject: "Registro de cliente - PETNOVA",
+    html: buildEmailLayout({
+      title: "Cliente registrado",
+      previewText: "Tus datos fueron registrados en PETNOVA.",
+      bodyHtml,
+    }),
+    text: `Hola ${payload.fullName}. Tus datos fueron registrados correctamente en PETNOVA.`,
+  };
+};
+
 const renderPasswordReset = (payload) => {
   const resetUrl = `${process.env.APP_BASE_URL}/reset-password?token=${encodeURIComponent(payload.token)}`;
 
@@ -188,7 +209,9 @@ const renderAppointmentRescheduled = (payload) => {
       Tu cita fue reagendada correctamente.
     </p>
     <p style="margin:0;font-size:15px;line-height:1.8;color:#475569;">
-      <strong>Nueva fecha y hora:</strong> ${formatDateTime(payload.appointmentDate, payload.appointmentTime)}
+      <strong>Mascota:</strong> ${escapeHtml(payload.petName || "No informada")}<br/>
+      <strong>Nueva fecha y hora:</strong> ${formatDateTime(payload.appointmentDate, payload.appointmentTime)}<br/>
+      <strong>Veterinario:</strong> ${escapeHtml(payload.veterinarianName || "Profesional asignado")}
     </p>
   `;
 
@@ -200,6 +223,29 @@ const renderAppointmentRescheduled = (payload) => {
       bodyHtml,
     }),
     text: `Tu cita fue reagendada para ${payload.appointmentDate} ${payload.appointmentTime}.`,
+  };
+};
+
+const renderAppointmentUpdated = (payload) => {
+  const bodyHtml = `
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.8;">
+      Tu cita fue actualizada correctamente.
+    </p>
+    <p style="margin:0;font-size:15px;line-height:1.8;color:#475569;">
+      <strong>Mascota:</strong> ${escapeHtml(payload.petName || "No informada")}<br/>
+      <strong>Fecha y hora:</strong> ${formatDateTime(payload.appointmentDate, payload.appointmentTime)}<br/>
+      <strong>Veterinario:</strong> ${escapeHtml(payload.veterinarianName || "Profesional asignado")}
+    </p>
+  `;
+
+  return {
+    subject: "Cita actualizada - PETNOVA",
+    html: buildEmailLayout({
+      title: "Cita actualizada",
+      previewText: "Tu cita mÃ©dica fue actualizada.",
+      bodyHtml,
+    }),
+    text: `Tu cita fue actualizada para ${payload.appointmentDate} ${payload.appointmentTime}.`,
   };
 };
 
@@ -252,6 +298,8 @@ const renderEmailTemplate = (template, payload) => {
       return renderGuestAppointmentConfirmation(payload);
     case "account_created":
       return renderAccountCreated(payload);
+    case "client_created":
+      return renderClientCreated(payload);
     case "password_reset":
       return renderPasswordReset(payload);
     case "pet_created":
@@ -262,6 +310,8 @@ const renderEmailTemplate = (template, payload) => {
       return renderAppointmentCreated(payload);
     case "appointment_rescheduled":
       return renderAppointmentRescheduled(payload);
+    case "appointment_updated":
+      return renderAppointmentUpdated(payload);
     case "appointment_cancelled":
       return renderAppointmentCancelled(payload);
     case "appointment_reminder":
