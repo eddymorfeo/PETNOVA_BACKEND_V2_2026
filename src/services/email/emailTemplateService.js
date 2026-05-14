@@ -19,8 +19,46 @@ const buildCtaButton = (label, href) => {
   `;
 };
 
+const buildAccountCreationUrl = (payload) => {
+  if (payload.accountCreationUrl) {
+    return payload.accountCreationUrl;
+  }
+
+  const baseUrl = process.env.APP_BASE_URL || "";
+
+  if (!baseUrl) {
+    return "";
+  }
+
+  const url = new URL("/register", baseUrl);
+
+  if (payload.contactEmail) {
+    url.searchParams.set("email", payload.contactEmail);
+  }
+
+  if (payload.contactName) {
+    url.searchParams.set("fullName", payload.contactName);
+  }
+
+  url.searchParams.set("source", "guest-appointment");
+
+  return url.toString();
+};
+
 const renderGuestAppointmentConfirmation = (payload) => {
-  const bodyHtml = `
+  const accountCreationUrl = buildAccountCreationUrl(payload);
+  const accountCreationCta = accountCreationUrl
+    ? `
+    <div style="margin-top:24px;padding:18px;border-radius:18px;background:#ecfeff;border:1px solid #bae6fd;">
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.8;color:#334155;">
+        Crea tu cuenta en el portal de clientes para consultar tus citas, registrar tus mascotas y acceder a tu historial.
+      </p>
+      ${buildCtaButton("Crear cuenta en PETNOVA", accountCreationUrl)}
+    </div>
+  `
+    : "";
+
+  let bodyHtml = `
     <p style="margin:0 0 16px;font-size:15px;line-height:1.8;">
       Hola <strong>${escapeHtml(payload.contactName)}</strong>, tu reserva fue registrada correctamente.
     </p>
@@ -58,6 +96,8 @@ const renderGuestAppointmentConfirmation = (payload) => {
     </p>
   `;
 
+  bodyHtml = bodyHtml.replace("</table>", `</table>${accountCreationCta}`);
+
   return {
     subject: "Confirmación de reserva - PETNOVA",
     html: buildEmailLayout({
@@ -65,7 +105,7 @@ const renderGuestAppointmentConfirmation = (payload) => {
       previewText: "Tu cita en PETNOVA fue registrada correctamente.",
       bodyHtml,
     }),
-    text: `Hola ${payload.contactName}. Tu reserva para ${payload.petName} fue registrada para ${payload.appointmentDate} ${payload.appointmentTime}.`,
+    text: `Hola ${payload.contactName}. Tu reserva para ${payload.petName} fue registrada para ${payload.appointmentDate} ${payload.appointmentTime}.${accountCreationUrl ? ` Crea tu cuenta en PETNOVA: ${accountCreationUrl}` : ""}`,
   };
 };
 

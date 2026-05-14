@@ -9,7 +9,10 @@ const {
 } = require("../models/appointmentModel");
 const { getWorkingHoursByVeterinarianId } = require("../models/workingHourModel");
 const { getTimeOffByVeterinarianAndDate } = require("../models/timeOffModel");
-const { createGuestBooking } = require("../models/guestBookingModel");
+const {
+  createGuestBooking,
+  updateGuestBookingById,
+} = require("../models/guestBookingModel");
 const {
   enqueueGuestAppointmentConfirmationEmail,
 } = require("./email/emailNotificationService");
@@ -386,6 +389,14 @@ async function createPublicGuestAppointment(payload) {
     });
   }
 
+  const accountCreationUrl = new URL(
+    "/register",
+    process.env.APP_BASE_URL || "http://localhost:3000"
+  );
+  accountCreationUrl.searchParams.set("email", payload.contactEmail);
+  accountCreationUrl.searchParams.set("fullName", payload.contactName);
+  accountCreationUrl.searchParams.set("source", "guest-appointment");
+
   await enqueueGuestAppointmentConfirmationEmail({
     toEmail: payload.contactEmail,
     contactName: payload.contactName,
@@ -399,8 +410,15 @@ async function createPublicGuestAppointment(payload) {
     appointmentDate: payload.appointment.appointmentDate,
     appointmentTime: payload.appointment.appointmentTime,
     reason: payload.appointment.reason || "Sin motivo informado",
+    accountCreationUrl: accountCreationUrl.toString(),
     createdBy: null,
   });
+
+  await updateGuestBookingById(
+    guestBooking.id,
+    { invitationSentAt: new Date().toISOString() },
+    null
+  );
 
   return {
     appointmentId: appointment.id,

@@ -25,12 +25,14 @@ const enqueueGuestAppointmentConfirmationEmail = async ({
   appointmentDate,
   appointmentTime,
   reason,
+  accountCreationUrl,
   createdBy = null,
 }) => {
   return enqueueEmail({
     toEmail,
     template: 'guest_appointment_confirmation',
     payload: {
+      contactEmail: toEmail,
       contactName,
       petName,
       appointmentTypeName,
@@ -38,6 +40,7 @@ const enqueueGuestAppointmentConfirmationEmail = async ({
       appointmentDate,
       appointmentTime,
       reason,
+      accountCreationUrl,
     },
     createdBy,
   });
