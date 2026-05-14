@@ -183,6 +183,11 @@ const updateClientById = async (clientId, data, updatedBy) => {
     values.push(data.email);
   }
 
+  if (data.passwordHash !== undefined) {
+    fields.push(`password_hash = $${index++}`);
+    values.push(data.passwordHash);
+  }
+
   if (data.phone !== undefined) {
     fields.push(`phone = $${index++}`);
     values.push(data.phone);

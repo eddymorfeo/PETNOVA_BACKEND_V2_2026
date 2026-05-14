@@ -13,6 +13,11 @@ const sendEmail = async ({ to, subject, html, text }) => {
     subject,
     html,
     text,
+    encoding: "utf-8",
+    textEncoding: "base64",
+    headers: {
+      "Content-Language": "es",
+    },
   });
 };
 

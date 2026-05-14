@@ -100,7 +100,7 @@ const renderClientCreated = (payload) => {
       Hola <strong>${escapeHtml(payload.fullName)}</strong>, tus datos fueron registrados correctamente en PETNOVA.
     </p>
     <p style="margin:16px 0 0;font-size:15px;line-height:1.8;color:#475569;">
-      Si necesitas actualizar tu informaciÃ³n o agendar una atenciÃ³n, comunÃ­cate con PETNOVA.
+      Si necesitas actualizar tu información o agendar una atención, comunícate con PETNOVA.
     </p>
   `;
 
@@ -242,7 +242,7 @@ const renderAppointmentUpdated = (payload) => {
     subject: "Cita actualizada - PETNOVA",
     html: buildEmailLayout({
       title: "Cita actualizada",
-      previewText: "Tu cita mÃ©dica fue actualizada.",
+      previewText: "Tu cita médica fue actualizada.",
       bodyHtml,
     }),
     text: `Tu cita fue actualizada para ${payload.appointmentDate} ${payload.appointmentTime}.`,

@@ -1,5 +1,11 @@
+const isNonEmptyString = (value) =>
+  typeof value === 'string' && value.trim().length > 0;
+
+const isOptionalText = (value) =>
+  value === undefined || value === null || typeof value === 'string';
+
 const validateCreateClient = (body) => {
-  const { fullName, email, phone, documentId, address } = body;
+  const { fullName, email, password, phone, documentId, address } = body;
 
   if (!fullName || !email) {
     return {
@@ -15,21 +21,32 @@ const validateCreateClient = (body) => {
     };
   }
 
-  if (phone && typeof phone !== 'string') {
+  if (
+    password !== undefined &&
+    password !== null &&
+    (!isNonEmptyString(password) || password.length < 8)
+  ) {
+    return {
+      success: false,
+      message: 'password debe tener al menos 8 caracteres.',
+    };
+  }
+
+  if (!isOptionalText(phone)) {
     return {
       success: false,
       message: 'phone debe ser texto.',
     };
   }
 
-  if (documentId && typeof documentId !== 'string') {
+  if (!isOptionalText(documentId)) {
     return {
       success: false,
       message: 'documentId debe ser texto.',
     };
   }
 
-  if (address && typeof address !== 'string') {
+  if (!isOptionalText(address)) {
     return {
       success: false,
       message: 'address debe ser texto.',
@@ -40,11 +57,12 @@ const validateCreateClient = (body) => {
 };
 
 const validateUpdateClient = (body) => {
-  const { fullName, email, phone, documentId, address, isActive } = body;
+  const { fullName, email, password, phone, documentId, address, isActive } = body;
 
   if (
     fullName === undefined &&
     email === undefined &&
+    password === undefined &&
     phone === undefined &&
     documentId === undefined &&
     address === undefined &&
@@ -70,21 +88,32 @@ const validateUpdateClient = (body) => {
     };
   }
 
-  if (phone !== undefined && typeof phone !== 'string') {
+  if (
+    password !== undefined &&
+    password !== null &&
+    (!isNonEmptyString(password) || password.length < 8)
+  ) {
+    return {
+      success: false,
+      message: 'password debe tener al menos 8 caracteres.',
+    };
+  }
+
+  if (!isOptionalText(phone)) {
     return {
       success: false,
       message: 'phone debe ser texto.',
     };
   }
 
-  if (documentId !== undefined && typeof documentId !== 'string') {
+  if (!isOptionalText(documentId)) {
     return {
       success: false,
       message: 'documentId debe ser texto.',
     };
   }
 
-  if (address !== undefined && typeof address !== 'string') {
+  if (!isOptionalText(address)) {
     return {
       success: false,
       message: 'address debe ser texto.',
