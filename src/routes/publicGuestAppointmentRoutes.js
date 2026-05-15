@@ -8,6 +8,7 @@ router.get('/veterinarians', publicGuestAppointmentController.listVeterinarians)
 router.get('/species', publicGuestAppointmentController.listSpecies);
 router.get('/breeds', publicGuestAppointmentController.listBreeds);
 router.get('/available-times', publicGuestAppointmentController.listAvailableTimes);
+router.get('/invitations/:invitationToken', publicGuestAppointmentController.getInvitation);
 router.post('/', publicGuestAppointmentController.create);
 
 module.exports = router;

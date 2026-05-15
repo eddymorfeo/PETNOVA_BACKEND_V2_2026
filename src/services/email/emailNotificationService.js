@@ -26,6 +26,7 @@ const enqueueGuestAppointmentConfirmationEmail = async ({
   appointmentTime,
   reason,
   accountCreationUrl,
+  invitationToken,
   createdBy = null,
 }) => {
   return enqueueEmail({
@@ -41,6 +42,7 @@ const enqueueGuestAppointmentConfirmationEmail = async ({
       appointmentTime,
       reason,
       accountCreationUrl,
+      invitationToken,
     },
     createdBy,
   });

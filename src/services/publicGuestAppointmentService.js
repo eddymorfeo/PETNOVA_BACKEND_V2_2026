@@ -11,8 +11,10 @@ const { getWorkingHoursByVeterinarianId } = require("../models/workingHourModel"
 const { getTimeOffByVeterinarianAndDate } = require("../models/timeOffModel");
 const {
   createGuestBooking,
+  findGuestBookingById,
   updateGuestBookingById,
 } = require("../models/guestBookingModel");
+const { findClientByEmail } = require("../models/clientModel");
 const {
   enqueueGuestAppointmentConfirmationEmail,
 } = require("./email/emailNotificationService");
@@ -389,13 +391,19 @@ async function createPublicGuestAppointment(payload) {
     });
   }
 
-  const accountCreationUrl = new URL(
-    "/register",
-    process.env.APP_BASE_URL || "http://localhost:3000"
+  const existingClient = await findClientByEmail(
+    payload.contactEmail.trim().toLowerCase()
   );
-  accountCreationUrl.searchParams.set("email", payload.contactEmail);
-  accountCreationUrl.searchParams.set("fullName", payload.contactName);
-  accountCreationUrl.searchParams.set("source", "guest-appointment");
+  let accountCreationUrl = null;
+
+  if (!existingClient) {
+    accountCreationUrl = new URL(
+      "/register",
+      process.env.APP_BASE_URL || "http://localhost:3000"
+    );
+    accountCreationUrl.searchParams.set("invitation", guestBooking.id);
+    accountCreationUrl.searchParams.set("source", "guest-appointment");
+  }
 
   await enqueueGuestAppointmentConfirmationEmail({
     toEmail: payload.contactEmail,
@@ -410,15 +418,18 @@ async function createPublicGuestAppointment(payload) {
     appointmentDate: payload.appointment.appointmentDate,
     appointmentTime: payload.appointment.appointmentTime,
     reason: payload.appointment.reason || "Sin motivo informado",
-    accountCreationUrl: accountCreationUrl.toString(),
+    accountCreationUrl: accountCreationUrl?.toString() ?? null,
+    invitationToken: existingClient ? null : guestBooking.id,
     createdBy: null,
   });
 
-  await updateGuestBookingById(
-    guestBooking.id,
-    { invitationSentAt: new Date().toISOString() },
-    null
-  );
+  if (!existingClient) {
+    await updateGuestBookingById(
+      guestBooking.id,
+      { invitationSentAt: new Date().toISOString() },
+      null
+    );
+  }
 
   return {
     appointmentId: appointment.id,
@@ -427,8 +438,34 @@ async function createPublicGuestAppointment(payload) {
   };
 }
 
+async function getGuestAppointmentInvitation(invitationToken) {
+  if (!invitationToken) {
+    throw new ApiError(400, "El token de invitación es obligatorio.");
+  }
+
+  const guestBooking = await findGuestBookingById(invitationToken);
+
+  if (!guestBooking) {
+    throw new ApiError(404, "Invitación no encontrada.");
+  }
+
+  const existingClient = await findClientByEmail(
+    guestBooking.contact_email.trim().toLowerCase()
+  );
+
+  if (existingClient) {
+    throw new ApiError(409, "Ya existe una cuenta registrada con este correo.");
+  }
+
+  return {
+    fullName: guestBooking.contact_name,
+    email: guestBooking.contact_email,
+  };
+}
+
 module.exports = {
   createPublicGuestAppointment,
+  getGuestAppointmentInvitation,
   listPublicAppointmentTypes,
   listPublicVeterinarians,
   listPublicSpecies,

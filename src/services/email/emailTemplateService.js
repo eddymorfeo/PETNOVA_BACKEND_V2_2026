@@ -26,20 +26,12 @@ const buildAccountCreationUrl = (payload) => {
 
   const baseUrl = process.env.APP_BASE_URL || "";
 
-  if (!baseUrl) {
+  if (!baseUrl || !payload.invitationToken) {
     return "";
   }
 
   const url = new URL("/register", baseUrl);
-
-  if (payload.contactEmail) {
-    url.searchParams.set("email", payload.contactEmail);
-  }
-
-  if (payload.contactName) {
-    url.searchParams.set("fullName", payload.contactName);
-  }
-
+  url.searchParams.set("invitation", payload.invitationToken);
   url.searchParams.set("source", "guest-appointment");
 
   return url.toString();

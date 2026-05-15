@@ -4,6 +4,7 @@ const {
 
 const {
   createPublicGuestAppointment,
+  getGuestAppointmentInvitation,
   listPublicAppointmentTypes,
   listPublicVeterinarians,
   listPublicAvailableTimes,
@@ -110,8 +111,23 @@ const listAvailableTimes = async (req, res, next) => {
   }
 };
 
+const getInvitation = async (req, res, next) => {
+  try {
+    const data = await getGuestAppointmentInvitation(req.params.invitationToken);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Invitación obtenida correctamente.',
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   create,
+  getInvitation,
   listAppointmentTypes,
   listVeterinarians,
   listSpecies,
