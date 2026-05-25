@@ -7,6 +7,7 @@ const {
   createAppointment,
   getAppointmentsByVeterinarianAndDate,
 } = require("../models/appointmentModel");
+const { createPet } = require("../models/petModel");
 const { getWorkingHoursByVeterinarianId } = require("../models/workingHourModel");
 const { getTimeOffByVeterinarianAndDate } = require("../models/timeOffModel");
 const {
@@ -53,6 +54,57 @@ function normalizeText(value) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "");
+}
+
+function buildGuestPetSnapshot(payload) {
+  return {
+    name: payload.pet.name,
+    speciesId: payload.pet.species,
+    breedId: payload.pet.breed || null,
+    sex: payload.pet.sex || null,
+    age: payload.pet.age || null,
+    weightKg: payload.pet.weightKg || null,
+    observations: payload.appointment.observations || null,
+  };
+}
+
+function buildPetNotesFromSnapshot(petSnapshot) {
+  const notes = [];
+
+  if (petSnapshot.age) {
+    notes.push(`Edad informada en reserva publica: ${petSnapshot.age}`);
+  }
+
+  if (petSnapshot.weightKg) {
+    notes.push(`Peso informado en reserva publica: ${petSnapshot.weightKg} kg`);
+  }
+
+  if (petSnapshot.observations) {
+    notes.push(`Observaciones de reserva publica: ${petSnapshot.observations}`);
+  }
+
+  return notes.length ? notes.join("\n") : null;
+}
+
+async function createPetFromGuestSnapshot(petSnapshot, clientId) {
+  if (!petSnapshot?.name || !petSnapshot?.speciesId || !clientId) {
+    return null;
+  }
+
+  return createPet({
+    clientId,
+    name: petSnapshot.name,
+    speciesId: petSnapshot.speciesId,
+    breedId: petSnapshot.breedId || null,
+    sex: petSnapshot.sex || null,
+    birthDate: null,
+    color: null,
+    microchip: null,
+    isSterilized: null,
+    allergies: null,
+    notes: buildPetNotesFromSnapshot(petSnapshot),
+    createdBy: null,
+  });
 }
 
 function getWeekdayCandidates(appointmentDate) {
@@ -342,9 +394,10 @@ async function createPublicGuestAppointment(payload) {
   );
   const endsAt = buildEndsAt(startsAt, selectedTime.slotMinutes || 30);
 
-  const [appointmentTypes, veterinarians] = await Promise.all([
+  const [appointmentTypes, veterinarians, existingClient] = await Promise.all([
     getAllAppointmentTypes(),
     getAllVeterinarians(),
+    findClientByEmail(payload.contactEmail.trim().toLowerCase()),
   ]);
 
   const selectedAppointmentType = appointmentTypes.find(
@@ -355,11 +408,21 @@ async function createPublicGuestAppointment(payload) {
     (item) => item.id === payload.appointment.veterinarianId
   );
 
+  const petSnapshot = buildGuestPetSnapshot(payload);
+  let createdPet = null;
+
+  if (existingClient) {
+    createdPet = await createPetFromGuestSnapshot(
+      petSnapshot,
+      existingClient.id
+    );
+  }
+
   const appointment = await createAppointment({
     veterinarianId: payload.appointment.veterinarianId,
     appointmentTypeId: payload.appointment.appointmentTypeId,
-    clientId: null,
-    petId: null,
+    clientId: existingClient?.id ?? null,
+    petId: createdPet?.id ?? null,
     startsAt: startsAt.toISOString(),
     endsAt: endsAt.toISOString(),
     status: "SCHEDULED",
@@ -374,8 +437,9 @@ async function createPublicGuestAppointment(payload) {
     contactEmail: payload.contactEmail,
     contactName: payload.contactName,
     contactPhone: payload.contactPhone || null,
+    petSnapshot,
     invitationSentAt: null,
-    convertedClientId: null,
+    convertedClientId: existingClient?.id ?? null,
     createdBy: null,
   });
 
@@ -391,9 +455,6 @@ async function createPublicGuestAppointment(payload) {
     });
   }
 
-  const existingClient = await findClientByEmail(
-    payload.contactEmail.trim().toLowerCase()
-  );
   let accountCreationUrl = null;
 
   if (!existingClient) {

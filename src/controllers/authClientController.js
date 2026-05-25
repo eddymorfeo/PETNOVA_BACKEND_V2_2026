@@ -15,7 +15,12 @@ const {
 
 const register = async (req, res, next) => {
   try {
-    const validation = validateClientRegister(req.body);
+    const payload = {
+      ...req.body,
+      invitation: req.body.invitation ?? req.query.invitation,
+    };
+
+    const validation = validateClientRegister(payload);
     if (!validation.success) {
       return res.status(400).json({
         success: false,
@@ -23,7 +28,7 @@ const register = async (req, res, next) => {
       });
     }
 
-    const data = await registerClient(req.body);
+    const data = await registerClient(payload);
 
     return res.status(201).json({
       success: true,

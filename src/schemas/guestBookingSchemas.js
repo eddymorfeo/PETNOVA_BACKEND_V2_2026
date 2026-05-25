@@ -8,6 +8,7 @@ const validateCreateGuestBooking = (body) => {
     contactEmail,
     contactName,
     contactPhone,
+    petSnapshot,
     invitationSentAt,
     convertedClientId,
   } = body;
@@ -47,6 +48,17 @@ const validateCreateGuestBooking = (body) => {
     };
   }
 
+  if (
+    petSnapshot !== undefined &&
+    petSnapshot !== null &&
+    typeof petSnapshot !== 'object'
+  ) {
+    return {
+      success: false,
+      message: 'petSnapshot debe ser un objeto.',
+    };
+  }
+
   if (invitationSentAt !== undefined && !isValidDateTimeString(invitationSentAt)) {
     return {
       success: false,
@@ -69,6 +81,7 @@ const validateUpdateGuestBooking = (body) => {
     contactEmail,
     contactName,
     contactPhone,
+    petSnapshot,
     invitationSentAt,
     convertedClientId,
   } = body;
@@ -77,6 +90,7 @@ const validateUpdateGuestBooking = (body) => {
     contactEmail === undefined &&
     contactName === undefined &&
     contactPhone === undefined &&
+    petSnapshot === undefined &&
     invitationSentAt === undefined &&
     convertedClientId === undefined
   ) {
@@ -104,6 +118,17 @@ const validateUpdateGuestBooking = (body) => {
     return {
       success: false,
       message: 'contactPhone debe ser texto.',
+    };
+  }
+
+  if (
+    petSnapshot !== undefined &&
+    petSnapshot !== null &&
+    typeof petSnapshot !== 'object'
+  ) {
+    return {
+      success: false,
+      message: 'petSnapshot debe ser un objeto.',
     };
   }
 

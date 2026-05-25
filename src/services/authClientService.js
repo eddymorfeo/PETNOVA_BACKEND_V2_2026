@@ -12,6 +12,15 @@ const {
   findClientAuthById,
   updateClientPasswordById,
 } = require('../models/clientModel');
+const {
+  findGuestBookingById,
+  updateGuestBookingById,
+} = require('../models/guestBookingModel');
+const {
+  findAppointmentById,
+  updateAppointmentById,
+} = require('../models/appointmentModel');
+const { createPet } = require('../models/petModel');
 
 const {
   createPasswordResetToken,
@@ -34,6 +43,8 @@ const buildClientAccessToken = (client) => {
   });
 };
 
+const normalizeEmail = (email) => email.trim().toLowerCase();
+
 const mapClientPublic = (client) => ({
   id: client.id,
   email: client.email,
@@ -44,24 +55,150 @@ const mapClientPublic = (client) => ({
   isActive: client.is_active,
 });
 
+const buildPetNotesFromSnapshot = (petSnapshot) => {
+  const notes = [];
+
+  if (petSnapshot.age) {
+    notes.push(`Edad informada en reserva publica: ${petSnapshot.age}`);
+  }
+
+  if (petSnapshot.weightKg) {
+    notes.push(`Peso informado en reserva publica: ${petSnapshot.weightKg} kg`);
+  }
+
+  if (petSnapshot.observations) {
+    notes.push(`Observaciones de reserva publica: ${petSnapshot.observations}`);
+  }
+
+  return notes.length ? notes.join('\n') : null;
+};
+
+const createPetFromGuestBooking = async (guestBooking, clientId) => {
+  const petSnapshot = guestBooking?.pet_snapshot;
+
+  if (!petSnapshot?.name || !petSnapshot?.speciesId) {
+    return null;
+  }
+
+  return createPet({
+    clientId,
+    name: petSnapshot.name,
+    speciesId: petSnapshot.speciesId,
+    breedId: petSnapshot.breedId || null,
+    sex: petSnapshot.sex || null,
+    birthDate: null,
+    color: null,
+    microchip: null,
+    isSterilized: null,
+    allergies: null,
+    notes: buildPetNotesFromSnapshot(petSnapshot),
+    createdBy: null,
+  });
+};
+
+const getInvitationToken = (payload) => {
+  if (typeof payload.invitation !== 'string') {
+    return null;
+  }
+
+  const invitation = payload.invitation.trim();
+  return invitation.length ? invitation : null;
+};
+
+const resolveGuestBookingInvitation = async (invitationToken, clientEmail) => {
+  if (!invitationToken) {
+    return null;
+  }
+
+  const guestBooking = await findGuestBookingById(invitationToken);
+
+  if (!guestBooking) {
+    throw new ApiError(404, 'Invitacion no encontrada.');
+  }
+
+  if (normalizeEmail(guestBooking.contact_email) !== clientEmail) {
+    throw new ApiError(403, 'La invitacion no corresponde al correo informado.');
+  }
+
+  if (guestBooking.converted_client_id) {
+    throw new ApiError(409, 'Esta invitacion ya fue utilizada.');
+  }
+
+  const appointment = await findAppointmentById(guestBooking.appointment_id);
+
+  if (!appointment) {
+    throw new ApiError(404, 'La cita asociada a la invitacion no existe.');
+  }
+
+  if (appointment.client_id) {
+    throw new ApiError(409, 'La cita ya esta asociada a un cliente.');
+  }
+
+  return {
+    guestBooking,
+    appointment,
+  };
+};
+
+const associateGuestBookingWithClient = async ({
+  guestBooking,
+  appointment,
+  clientId,
+}) => {
+  if (!guestBooking || !appointment) {
+    return;
+  }
+
+  const pet = await createPetFromGuestBooking(guestBooking, clientId);
+
+  await updateAppointmentById(
+    appointment.id,
+    {
+      clientId,
+      ...(pet ? { petId: pet.id } : {}),
+    },
+    null,
+  );
+
+  await updateGuestBookingById(
+    guestBooking.id,
+    { convertedClientId: clientId },
+    null,
+  );
+};
+
 const registerClient = async (payload) => {
-  const existingClient = await findClientByEmail(payload.email.trim().toLowerCase());
+  const normalizedEmail = normalizeEmail(payload.email);
+  const invitationToken = getInvitationToken(payload);
+  const existingClient = await findClientByEmail(normalizedEmail);
 
   if (existingClient) {
     throw new ApiError(409, 'Ya existe una cuenta asociada a ese correo.');
   }
 
+  const invitation = await resolveGuestBookingInvitation(
+    invitationToken,
+    normalizedEmail,
+  );
+
   const passwordHash = await hashPassword(payload.password);
 
   const client = await createClient({
     fullName: payload.fullName,
-    email: payload.email.trim().toLowerCase(),
+    email: normalizedEmail,
     phone: payload.phone || null,
     documentId: payload.documentId || null,
     address: payload.address || null,
     passwordHash,
     createdBy: null,
   });
+
+  if (invitation) {
+    await associateGuestBookingWithClient({
+      ...invitation,
+      clientId: client.id,
+    });
+  }
 
   await enqueueAccountCreatedEmail({
     toEmail: client.email,

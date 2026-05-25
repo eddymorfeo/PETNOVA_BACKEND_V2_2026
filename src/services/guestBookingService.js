@@ -41,6 +41,7 @@ const createNewGuestBooking = async (payload, authenticatedUserId) => {
     contactEmail: payload.contactEmail,
     contactName: payload.contactName,
     contactPhone: payload.contactPhone,
+    petSnapshot: payload.petSnapshot,
     invitationSentAt: payload.invitationSentAt,
     convertedClientId: payload.convertedClientId,
     createdBy: authenticatedUserId,

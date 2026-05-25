@@ -5,7 +5,15 @@ const isValidEmail = (value) =>
   isNonEmptyString(value) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
 const validateClientRegister = (body) => {
-  const { fullName, email, password, phone, documentId, address } = body;
+  const {
+    fullName,
+    email,
+    password,
+    phone,
+    documentId,
+    address,
+    invitation,
+  } = body;
 
   if (!isNonEmptyString(fullName)) {
     return { success: false, message: 'fullName es obligatorio.' };
@@ -36,6 +44,14 @@ const validateClientRegister = (body) => {
 
   if (address !== undefined && address !== null && typeof address !== 'string') {
     return { success: false, message: 'address debe ser texto.' };
+  }
+
+  if (
+    invitation !== undefined &&
+    invitation !== null &&
+    typeof invitation !== 'string'
+  ) {
+    return { success: false, message: 'invitation debe ser texto.' };
   }
 
   return { success: true };

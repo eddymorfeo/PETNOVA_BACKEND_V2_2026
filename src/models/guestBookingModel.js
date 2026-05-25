@@ -5,6 +5,7 @@ const createGuestBooking = async ({
   contactEmail,
   contactName,
   contactPhone,
+  petSnapshot,
   invitationSentAt,
   convertedClientId,
   createdBy,
@@ -15,6 +16,7 @@ const createGuestBooking = async ({
       contact_email,
       contact_name,
       contact_phone,
+      pet_snapshot,
       invitation_sent_at,
       converted_client_id,
       created_by,
@@ -22,13 +24,14 @@ const createGuestBooking = async ({
       created_at,
       updated_at
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $7, NOW(), NOW())
+    VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $8, NOW(), NOW())
     RETURNING
       id,
       appointment_id,
       contact_email,
       contact_name,
       contact_phone,
+      pet_snapshot,
       invitation_sent_at,
       converted_client_id,
       created_by,
@@ -42,6 +45,7 @@ const createGuestBooking = async ({
     contactEmail,
     contactName,
     contactPhone || null,
+    petSnapshot ? JSON.stringify(petSnapshot) : null,
     invitationSentAt || null,
     convertedClientId || null,
     createdBy,
@@ -58,6 +62,7 @@ const findGuestBookingById = async (guestBookingId) => {
       gb.contact_email,
       gb.contact_name,
       gb.contact_phone,
+      gb.pet_snapshot,
       gb.invitation_sent_at,
       gb.converted_client_id,
       gb.created_by,
@@ -81,6 +86,7 @@ const getAllGuestBookings = async () => {
       gb.contact_email,
       gb.contact_name,
       gb.contact_phone,
+      gb.pet_snapshot,
       gb.invitation_sent_at,
       gb.converted_client_id,
       gb.created_by,
@@ -115,6 +121,11 @@ const updateGuestBookingById = async (guestBookingId, data, updatedBy) => {
     values.push(data.contactPhone);
   }
 
+  if (data.petSnapshot !== undefined) {
+    fields.push(`pet_snapshot = $${index++}::jsonb`);
+    values.push(data.petSnapshot ? JSON.stringify(data.petSnapshot) : null);
+  }
+
   if (data.invitationSentAt !== undefined) {
     fields.push(`invitation_sent_at = $${index++}`);
     values.push(data.invitationSentAt);
@@ -142,6 +153,7 @@ const updateGuestBookingById = async (guestBookingId, data, updatedBy) => {
       contact_email,
       contact_name,
       contact_phone,
+      pet_snapshot,
       invitation_sent_at,
       converted_client_id,
       created_by,
@@ -164,6 +176,7 @@ const deleteGuestBookingById = async (guestBookingId) => {
       contact_email,
       contact_name,
       contact_phone,
+      pet_snapshot,
       invitation_sent_at,
       converted_client_id,
       created_by,
